@@ -1,10 +1,10 @@
 
 
-
+require("dotenv").config();
 const { MongoClient } = require("mongodb");
 
 // MongoDB connection URL
-const url = "mongodb+srv://kpssecondid5_db_user:FbodvahjHt5MW05c@namastenode.2sgdd2e.mongodb.net/?appName=NamasteNode";
+const url = process.env.MONGO_URL;
 const client = new MongoClient(url);
 
 // Database name
