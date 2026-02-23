@@ -2,7 +2,7 @@
 const express = require("express")
 
 // Defining the port number where server will run
-const port = 3001;
+const port = 3002;
 
 // Creating an Express application
 const server = express();
