@@ -1,14 +1,15 @@
 
-const mongose = require("mongose")
+
+require("dotenv").config();
+// // const url = process.env.MONGO_URL;
+const mongoose = require('mongoose')
+const url = process.env.MONGO_URL;
 
 
-const connectDb = async() => {
-    await mongose.connect("mongodb+srv://kpssecondid5_db_user:FbodvahjHt5MW05c@namastenode.2sgdd2e.mongodb.net/?appName=NamasteNode")
-}
+ const ConnectToDB = async() =>{
+    console.log("Mongo URL:", process.env.MONGO_URL);
+    await mongoose.connect(url)
+ }
 
-connectDb().
-then(() => {
-    console.log("Connection to Database is Successful.")
-}).catch((err) =>{
-    console.error("Connection failed ." , err)
-})
+module.exports = ConnectToDB
+
