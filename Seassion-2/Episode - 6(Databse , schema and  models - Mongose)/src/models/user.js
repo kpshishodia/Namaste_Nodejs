@@ -47,6 +47,11 @@ const userSchema = new Schema({
     stream : {
         type: String
     },
+
+    about : {
+        type : string,
+        default : "This is default Message for about."
+    }
      
 },
 {

@@ -1,43 +1,3 @@
-// const mongoose = require("mongoose")
-
-// const {Schema} = mongoose
-
-// const userSchema = new Schema({
-
-//     firstName : {
-//         type : String
-//     }, 
-
-//     lastName : {
-//         type : String
-//     },
-
-//     gender : {
-//         type : String
-//     },
-
-//     email : {
-//         type : String
-//     },
-
-//     password : {
-//         type : String
-//     },
-
-//     age : {
-//         type : Number
-//     }
-     
-// })
-
- 
-// const User = mongoose.model("User" , userSchema);
-
-
-// module.exports = User;
-
-
-
 
 
 const mongoose = require("mongoose")
@@ -129,9 +89,9 @@ const userSchema = new Schema({
  
 // const User = mongoose.model("User" , userSchema);
 const User = mongoose.model(
-  "users_validation",
-  userSchema,
-  "users_validation"
+ "users_validation",   // 1️⃣ Model name
+  userSchema,           // 2️⃣ Schema
+  "users_validation"    // 3️⃣ Collection name (optional)
 );
 
 
