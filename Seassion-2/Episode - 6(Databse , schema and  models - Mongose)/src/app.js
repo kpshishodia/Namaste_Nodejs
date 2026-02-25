@@ -1,36 +1,50 @@
-
-
+// Importing Express framework
 const express = require("express")
+
+// Defining port number
 const port = 4000
+
+// Creating Express server instance
 const server = express()
+
+// Importing database connection function
 const connectDB = require("./config/Database")
+
+// Importing User model (schema is defined in another file)
 const User = require("./models/user")
+
+// Middleware to parse incoming JSON requests
 server.use(express.json()); 
 
 
 
-// creating new instance of user model
+// =======================================================
+// CUSTOM MIDDLEWARES
+// =======================================================
 
-// middleware - middleware to verify if user is 18+ will able to add data to database via post if not it will show error
+// Middleware - verifies user age before allowing signup
+// If age < 18 → user cannot be added to database
 const verifyage = (req,res,next)=>{
-    const {age} = req.body;
+    const {age} = req.body;   // Extract age from request body
 
+    // Check if age is provided
     if(!age){
         return res.status(400).send("Age is required.")
     }
     
+    // Allow only if age is 18+
     if(age >= 18){
-        next() //saving to database
+        next() // Move to next middleware / route handler
     }else{
         res.status(400).send("User must be 18+.")
     }
 }
 
 
-// stream middleware
-
+// Middleware - validates stream field
+// Only allows science, commerce, arts
 const choosestream = (req, res, next) => {
-    const { stream } = req.body;
+    const { stream } = req.body;  // Extract stream from request body
 
     // 1️⃣ Check if stream is provided
     if (!stream) {
@@ -60,10 +74,18 @@ const choosestream = (req, res, next) => {
 };
 
 
-// signup API - to add data fromm postoman to databse
 
+// =======================================================
+// SIGNUP API - Create New User
+// =======================================================
+
+// POST /signup
+// This route adds user data from Postman into MongoDB
+// verifyage and choosestream middlewares run before saving
 server.post("/signup", verifyage, choosestream ,  async (req, res) => {
     try {
+
+        // Example object (commented example)
         // const userobj = {
         //     firstName: "Sample3 name",
         //     lastName: "Sample3 lastname",
@@ -75,14 +97,19 @@ server.post("/signup", verifyage, choosestream ,  async (req, res) => {
 
         // const user = new User(userobj)
         
+        // Creating new user using request body
         const user = new User(req.body)
+
         // console.log(req.body)
 
+        // Example validation check (commented)
         // if (!user.email) {
         //     throw new Error("Email is required")
         // }
 
+        // Save user into database
         await user.save()
+
         console.log(user)
 
         res.status(201).send("User added successfully to the database.")
@@ -95,34 +122,47 @@ server.post("/signup", verifyage, choosestream ,  async (req, res) => {
 })
 
 
-// user API - geting single user from databse
 
-// get user by email
-server.get("/user", async (req,res)=>{
-    // const userEmail = req.body.userEmail
-     const {userEmail} = req.body
+// =======================================================
+// GET USERS BY EMAIL (Multiple users)
+// =======================================================
+
+// This finds users by matching email
+server.get("/usersbyEamil", async (req,res)=>{
+    
+     const {userEmail} = req.body   // Getting email from request body
+
 try{
-    const userdata = await User.find({email : userEmail})
-    res.send(userdata)
+    // Find all users matching this email
+    const usersData = await User.find({email : userEmail})
 
+    if(usersData.length > 0){
+        res.send(usersData)
+    }else{
+        res.send("user not found.")
+    }
 }catch(error){
 res.status(400).send("Invalid Email.")
 }
 })
 
-// // get user by findone method 
 
+// =======================================================
+// GET ONE USER USING findOne()
+// =======================================================
 
 server.get("/oneuser", async (req, res) => {
 
-    const {userEmail} = req.body;
+    const {userEmail} = req.body;  // Getting email from request body
 
     try {
 
+        // Check if email provided
         if (!userEmail) {
             return res.status(400).send("Email is required");
         }
 
+        // Find single user
         const userEmaildata = await User.findOne({ email: userEmail });
 
         if (!userEmaildata) {
@@ -138,29 +178,44 @@ server.get("/oneuser", async (req, res) => {
 
 
 
-// feed API - to find all documents or all users from database
+// =======================================================
+// FEED API - Get All Users
+// =======================================================
 
+// Returns all documents from User collection
 server.get("/feed",  async (req,res) =>{
 try{
+
 const usersfeed = await User.find();
 
 if(usersfeed.length === 0){
    return  res.send("Feed is Empty.")
 }
+
 res.send(usersfeed)
+
 }catch(error){
 res.status(400).send("Something wrong in feed.")
 }
 })
 
-// Model.findById() - get user by id
 
+
+// =======================================================
+// GET USER BY ID
+// =======================================================
+
+// Fetch single user using MongoDB ObjectId
 server.get("/userid", async (req, res) => {
 
-    const {UserId} = req.body
+    const {UserId} = req.body   // Getting UserId from request body
+
     try {
         // const { id } = req.params;
+
+        // Find user by ID
          const user = await User.findById({_id : UserId})
+
         // const user = await User.findById(UserId);
 
         if (!user) {
@@ -168,6 +223,7 @@ server.get("/userid", async (req, res) => {
         }
 
         res.send(user);
+
     } catch (error) {
         res.status(400).send("Invalid User ID");
     }
@@ -175,13 +231,22 @@ server.get("/userid", async (req, res) => {
 
 
 
-// Delete User API
+// =======================================================
+// DELETE USER
+// =======================================================
 
-server.get("/deleteuser", async(req,res)=>{
-    const {UserId} = req.body
+// Deletes user by ID
+server.delete("/deleteuser", async(req,res)=>{
+    const {UserId} = req.body   // Getting UserId from body
+    
     try{
+
+        console.log(UserId)
+
         // const user = await User.findByIdAndDelete({_id : UserId})
+
         const user = await User.findByIdAndDelete(UserId);
+
         res.send("Successfully Deleted User from Database.")
 
     }catch(error){
@@ -190,50 +255,73 @@ server.get("/deleteuser", async(req,res)=>{
 })
 
 
-// Update User Data - Patch API  Model.findByIdAndUpdate()
 
-// server.patch("/UpdateUser" , async(req,res)=>{
-//     const{UserId} = req.body
-//     const {Data} = req.body
+// =======================================================
+// UPDATE USER (PATCH)
+// =======================================================
+
+// Updates user data using ID
+server.patch("/UpdateUser" , async(req,res)=>{
+    
+    const{UserId} = req.body   // User ID
+    const {Data} = req.body    // Data to update
     
 
-//     try{
-//     const user = await User.findByIdAndUpdate({_id : UserId} , Data)
+    try{
 
-//     runValidators : true;
-//     res.send("User Updated Successfully.")
-//     }catch(error){
-//         res.status(400).send("Invalid User ID , having error in updating user.")
-//     }
-// })
+    // Update user document
+    const user = await User.findByIdAndUpdate({_id : UserId} , Data)
 
-server.patch("/UpdateUser", async (req, res) => {
-  const { UserId, Data } = req.body;
+    if(!user){
+        return res.send("Erorr updating user")
+    }else{
 
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      UserId,        // pass ID directly
-      Data,          // fields to update
-      {
-        new: true,           // return updated document
-        runValidators: true  // run schema validations
-      }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).send("User not found");
+    runValidators : true;   // (Not active here - just written)
+    res.send("User Updated Successfully.")
     }
 
-    res.status(200).send("User updated successfully");
-  } catch (error) {
-    res.status(400).send("Invalid User ID or error updating user");
-  }
-});
+    }catch(error){
+        res.status(400).send("Invalid User ID , having error in updating user.")
+    }
+})
 
 
+// Improved update version (commented example)
+// server.patch("/UpdateUser", async (req, res) => {
+//   const { UserId, Data } = req.body;
+
+//   try {
+//     const updatedUser = await User.findByIdAndUpdate(
+//       UserId,
+//       Data,
+//       {
+//         new: true,
+//         runValidators: true
+//       }
+//     );
+
+//     if (!updatedUser) {
+//       return res.status(404).send("User not found");
+//     }
+
+//     res.status(200).send("User updated successfully");
+//   } catch (error) {
+//     res.status(400).send("Invalid User ID or error updating user");
+//   }
+// });
+
+
+
+// =======================================================
+// DATABASE CONNECTION & SERVER START
+// =======================================================
+
+// Connect to MongoDB first
 connectDB()
     .then(() => {
         console.log("MongoDB Connected Successfully")
+
+        // Start server only after DB connection is successful
         server.listen(port, () => {
             console.log("Server running on port " + port)
         })
@@ -241,9 +329,3 @@ connectDB()
     .catch((error) => {
         console.error("MongoDB Connection Failed:", error)
     })
-
-
-    
-
-
-
