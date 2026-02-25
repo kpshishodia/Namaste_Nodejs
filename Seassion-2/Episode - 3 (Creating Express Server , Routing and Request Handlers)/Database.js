@@ -11,7 +11,7 @@ const url = process.env.MONGO_URL;
 const client = new MongoClient(url);
 
 // Name of the database you want to use
-const dbName = "NamasteNodejs";
+const dbName = "namaste_node_learning";
 
 // Main async function to handle database operations
 async function main() {
@@ -24,7 +24,7 @@ async function main() {
     const db = client.db(dbName);
 
     // 3️⃣ Select (or create if not exists) a collection
-    const collection = db.collection("Episode_3_Express_server");
+    const collection = db.collection("Episode_3_Express_server_DB_connection_using_mongoDB");
 
     // ------------------------
     // INSERT ONE DOCUMENT

@@ -14,15 +14,13 @@
 
 // connectDB()
 
-
+require("dotenv").config();
 const mongoose = require("mongoose")
+const url = process.env.MONGO_URL
 
-const connectDB = async () =>{
-    await mongoose.connect
-    // ("mongodb+srv://kpssecondid5_db_user:FbodvahjHt5MW05c@namastenode.2sgdd2e.mongodb.net/?appName=NamasteNode")
-    // ("mongodb+srv://kpssecondid5_db_user:FbodvahjHt5MW05c@namastenode.2sgdd2e.mongodb.net/?appName=NamasteNode/devTinder")
-    ("mongodb+srv://kpssecondid5_db_user:FbodvahjHt5MW05c@namastenode.2sgdd2e.mongodb.net/?appName=test/users")
+const ConnectToDB = async () =>{
+    await mongoose.connect(url)
 };
 
 
-module.exports = connectDB
+module.exports = ConnectToDB
