@@ -3,7 +3,7 @@
 const express = require("express")
 const port = 8000
 const server = express()
-const connectDB = require("./config/Database")
+const ConnectToDB = require("./config/Database")
 const User = require("./models/user")
 // const {ValidateSignUpdata} = require("./utils/Validation")
 const ValidateSignUpdata = require("./utils/Validation")
@@ -220,7 +220,7 @@ server.post("/SendConnectionRequest" ,  UserAuth , async (req,res) => {
 
 // DB connection 
 
-connectDB()
+ConnectToDB()
     .then(() => {
         console.log("MongoDB Connected Successfully")
         server.listen(port, () => {
