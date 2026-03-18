@@ -49,7 +49,7 @@ const userSchema = new Schema({
     },
 
     about : {
-        type : string,
+        type : String,
         default : "This is default Message for about."
     }
      
