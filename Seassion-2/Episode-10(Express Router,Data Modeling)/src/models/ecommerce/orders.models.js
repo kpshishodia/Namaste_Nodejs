@@ -29,7 +29,13 @@ type: [orderItemSchema]
 },
 
 adress: {
-    type: String
+    type: String,
+    required: true
+},
+status: {
+    type: String,
+    enum: ["PENDING", "CANCELLED", "DELIVERDED"],
+    default: "PENDING"
 }
 },{timestamps: true})
 

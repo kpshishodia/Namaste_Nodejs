@@ -2,8 +2,10 @@
 
 // ================= IMPORT SECTION =================
 
-// Load environment variables early (so all modules can access process.env)
-require("dotenv").config()
+// Load environment variables early (so all modules can access process.env).
+// We explicitly load `src/.env` so it works even if you run `node` from the repo root.
+const path = require("path")
+require("dotenv").config({ path: path.join(__dirname, ".env") })
 
 // Import express framework
 const express = require("express")

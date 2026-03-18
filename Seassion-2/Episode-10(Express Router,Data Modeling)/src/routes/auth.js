@@ -12,8 +12,6 @@ const jwt = require("jsonwebtoken")
 // User MongoDB model
 const User = require("../models/user")
 
-require("dotenv").config()
-
 // ================= SIGNUP =================
 
 authRouter.post("/signup", async (req, res) => {
