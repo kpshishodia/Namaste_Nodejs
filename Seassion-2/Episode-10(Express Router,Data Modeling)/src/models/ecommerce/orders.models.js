@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 
 const {Schema} = mongoose
 
-const orderItemSchema = new this.Schemachema({
+const orderItemSchema = new Schema({
 productId:{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Product"
