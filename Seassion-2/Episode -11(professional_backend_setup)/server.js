@@ -1,11 +1,9 @@
 require("dotenv").config();
-const ConnectToDB = require("./DB/Database")
-const userSchema = require("./models/user")
+const ConnectToDB = require("./src/DB/Database")
 const express = require("express")
 const server = express()
-// Middleware → parses incoming JSON body
-server.use(express.json()); 
 const port = process.env.PORT
+const User = require("./src/models/user")
 
 // ================= DATABASE CONNECTION =================
 
