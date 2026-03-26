@@ -65,6 +65,25 @@ const userSchema = new Schema({
     
     skills : {
         type : [String]
+    },
+
+    avatar : {
+        type : String, // cloud service privider
+        required : true,
+    },
+
+    coverImage : {
+        type : String,
+    },
+
+    watchHistory : [
+        {
+            type : Schema.Types.ObjectId,
+            ref : "Video"
+        }
+    ],
+    rsfreshtoken : {
+        type : String,
     }
      
 
