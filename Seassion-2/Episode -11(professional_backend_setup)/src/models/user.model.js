@@ -3,6 +3,10 @@ const mongoose = require("mongoose")
 // import validator from 'validator';
 const validator = require("validator")
 
+const jwt = require("jsonwebtoken")
+const bcrypt = require("bcrypt")
+
+
 const {Schema} = mongoose
 
 const userSchema = new Schema({
@@ -100,12 +104,15 @@ const userSchema = new Schema({
 })
 
  
-// const User = mongoose.model("User" , userSchema);
-// const User = mongoose.model(
-//   "users_validation",
-//   userSchema,
-//   "users_validation"
-// );
+userSchema.pre("save" , async function (next) {
+
+    if(!this.isModified("password")) return next ();
+    
+    this.password = bcrypt.hash(this.password , 10)
+    next()
+})
+
+
 
 
 const User = mongoose.model(
