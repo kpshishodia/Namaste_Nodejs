@@ -1,87 +1,95 @@
 const mongoose = require("mongoose");
 
-const mongooseAgrregatePaginate = require("mongoose-aggregate-paginate-v2")
+// Plugin used for pagination with aggregation queries
+const mongooseAgrregatePaginate = require("mongoose-aggregate-paginate-v2");
 
 const { Schema } = mongoose;
 
 // -----------------------------
-// Video Schema
+// 📹 Video Schema Definition
 // -----------------------------
 const videoSchema = new Schema(
   {
-    // URL or path of video file
+    // 🎥 Stores video file URL (Cloudinary / S3 / local path)
     videoFile: {
       type: String,
-      required: true,
+      required: true, // must be provided
     },
 
-    // Thumbnail image
+    // 🖼 Thumbnail image URL for preview
     thumbnail: {
       type: String,
       required: true,
     },
 
-    // Title of video
+    // 📝 Title of the video
     title: {
       type: String,
       required: true,
-      trim: true,
+      trim: true, // removes extra spaces from start & end
     },
 
-    // Description of video
+    // 📄 Optional description of the video
     description: {
       type: String,
       trim: true,
     },
 
-    // Duration in seconds
+    // ⏱ Duration of the video in seconds
     duration: {
       type: Number,
       required: true,
     },
 
-    // Owner (User who uploaded video)
+    // 👤 Reference to the user who uploaded the video
     owner: {
       type: Schema.Types.ObjectId,
-      ref: "User", // reference to User model
+      ref: "User", // links this field to User collection
       required: true,
     },
 
-    // Views count
+    // 👀 Number of views on the video
     views: {
       type: Number,
-      default: 0,
+      default: 0, // starts from 0
     },
 
-    // Likes count
+    // ❤️ Number of likes on the video
     likes: {
       type: Number,
       default: 0,
     },
 
-    // Is video published or private
+    // 🔒 Indicates if video is public or private
     isPublished: {
       type: Boolean,
-      default: true,
+      default: true, // true = public, false = private
     },
   },
   {
-    timestamps: true, // adds createdAt & updatedAt
+    // 🕒 Automatically adds:
+    // createdAt → when document created
+    // updatedAt → when document updated
+    timestamps: true,
   }
 );
 
-
-
 // -----------------------------
-// Model
+// 🧠 Create Model
 // -----------------------------
 const Video = mongoose.model(
-  "Video",     // Model name
+  "Video",     // Model name (used in code)
   videoSchema,
-  "videos"     // Collection name (best practice: lowercase plural)
+  "videos"     // Collection name in MongoDB
 );
 
+// -----------------------------
+// 🔌 Apply Pagination Plugin
+// -----------------------------
+// Adds aggregatePaginate() method to schema
+videoSchema.plugin(mongooseAgrregatePaginate);
 
-videoSchema.plugin(mongooseAgrregatePaginate)
-
+// -----------------------------
+// 📦 Export Model
+// -----------------------------
 module.exports = Video;
