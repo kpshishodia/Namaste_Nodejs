@@ -80,7 +80,7 @@ const videoSchema = new Schema(
 const Video = mongoose.model(
   "Video",     // Model name (used in code)
   videoSchema,
-  "videos"     // Collection name in MongoDB
+  "ytvideo"     // Collection name in MongoDB
 );
 
 // -----------------------------
