@@ -3,7 +3,7 @@ const ConnectToDB = require("./src/DB/Database")
 const express = require("express")
 const server = express()
 const port = process.env.PORT
-const User = require("./src/models/user")
+
 
 // ================= DATABASE CONNECTION =================
 
