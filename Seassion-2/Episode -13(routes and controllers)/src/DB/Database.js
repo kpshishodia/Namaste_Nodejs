@@ -8,13 +8,18 @@ const URL = (`${MONGO_URI}/${DB_NAME}`)
 
 const ConnectToDB = async () => {
   try {
-    console.log("Mongo URL:", URL); // debug
+    // Debug log to verify your URL (remove in production if you want)
+    console.log("Mongo URL:", URL);
 
     await mongoose.connect(URL);
 
     console.log("✅ MongoDB Connected");
   } catch (error) {
+    // IMPORTANT:
+    // Re-throw the error so the caller can stop the server from starting
+    // when MongoDB connection fails.
     console.log("❌ MongoDB Connection Failed:", error.message);
+    throw error;
   }
 };
 
