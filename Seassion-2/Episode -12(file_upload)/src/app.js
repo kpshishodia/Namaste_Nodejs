@@ -41,7 +41,7 @@ app.use(cookierParser());
 
 // routes import
 
-const userRouter = require("./routes/user.route.js")
+const userRouter = require("../../Episode -13(routes anf controllers)/src/routes/user.route.js")
 
 // routes decleration
 
