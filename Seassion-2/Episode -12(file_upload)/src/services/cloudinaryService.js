@@ -60,4 +60,4 @@ const uploadOnCloudinary = async (localFilePath) => {
 // 📦 Export Function
 // -----------------------------
 // Makes this function usable in other files (like controllers)
-module.exports = { uploadOnCloudinary };
+module.exports = uploadOnCloudinary ;
