@@ -1,4 +1,4 @@
-const registerUser = async (req, res) => {
+const registerUserController = async (req, res) => {
   try {
     return res.status(201).json({
       message: "okk",
@@ -11,4 +11,4 @@ const registerUser = async (req, res) => {
   }
 };
 
-module.exports =  registerUser ;
+module.exports = registerUserController ;

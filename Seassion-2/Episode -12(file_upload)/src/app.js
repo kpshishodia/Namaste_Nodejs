@@ -38,5 +38,14 @@ app.use(express.static("public"));
 // Cookies will be available in req.cookies
 app.use(cookierParser());
 
+
+// routes import
+
+const userRouter = require("./routes/user.route.js")
+
+// routes decleration
+
+app.use("/api/v1/users" , userRouter)
+
 // Export the app so it can be used in server.js or index.js
 module.exports = app;

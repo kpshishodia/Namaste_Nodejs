@@ -1,8 +1,7 @@
 require("dotenv").config();
 const ConnectToDB = require("./src/DB/Database")
-const express = require("express")
-const server = express()
 const port = process.env.PORT
+const app = require("./src/app")
 
 
 // ================= DATABASE CONNECTION =================
@@ -13,7 +12,7 @@ ConnectToDB()
         console.log("MongoDB Connected Successfully")
 
         // Start server only after DB connected
-        server.listen(port, () => {
+        app.listen(port, () => {
             console.log("Server running on port " + port)
         })
     })
