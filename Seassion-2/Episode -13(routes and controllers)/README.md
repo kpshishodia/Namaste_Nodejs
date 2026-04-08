@@ -64,5 +64,5 @@ Adjust the values according to your local setup or deployment configuration.
 
 ### Author
 
-Created by **kpssh**.
+Created by **Karan _Shishodia_**.
 
