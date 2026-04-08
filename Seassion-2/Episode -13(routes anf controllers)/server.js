@@ -1,22 +1,27 @@
+// Load environment variables from .env (PORT, DB config, etc.)
 require("dotenv").config();
-const ConnectToDB = require("./src/DB/Database")
-const express = require("express")
-const server = express()
-const port = process.env.PORT
 
+// Function that connects to MongoDB
+const ConnectToDB = require("./src/DB/Database");
+
+// Import the configured Express app (middlewares, routes, etc.)
+const app = require("./src/app");
+
+// Prefer PORT from .env, but fall back to 8000 for local dev
+const port = process.env.PORT || 8000;
 
 // ================= DATABASE CONNECTION =================
 
-// First connect to MongoDB
+// Connect to MongoDB first, then start the HTTP server
 ConnectToDB()
-    .then(() => {
-        console.log("MongoDB Connected Successfully")
+  .then(() => {
+    console.log("MongoDB Connected Successfully");
 
-        // Start server only after DB connected
-        server.listen(port, () => {
-            console.log("Server running on port " + port)
-        })
-    })
-    .catch((error) => {
-        console.error("MongoDB Connection Failed:", error)
-    })
+    // Start server only after DB is connected successfully
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  })
+  .catch((error) => {
+    console.error("MongoDB Connection Failed:", error);
+  });

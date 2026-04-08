@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 // Plugin used for pagination with aggregation queries
-const mongooseAgrregatePaginate = require("mongoose-aggregate-paginate-v2");
+const mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
 
 const { Schema } = mongoose;
 
@@ -75,19 +75,19 @@ const videoSchema = new Schema(
 );
 
 // -----------------------------
+// 🔌 Apply Pagination Plugin
+// -----------------------------
+// Adds aggregatePaginate() method (aggregatePaginate) to the schema
+videoSchema.plugin(mongooseAggregatePaginate);
+
+// -----------------------------
 // 🧠 Create Model
 // -----------------------------
 const Video = mongoose.model(
-  "Video",     // Model name (used in code)
+  "Video", // Model name (used in code)
   videoSchema,
-  "ytvideo"     // Collection name in MongoDB
+  "ytvideo" // Collection name in MongoDB
 );
-
-// -----------------------------
-// 🔌 Apply Pagination Plugin
-// -----------------------------
-// Adds aggregatePaginate() method to schema
-videoSchema.plugin(mongooseAgrregatePaginate);
 
 // -----------------------------
 // 📦 Export Model

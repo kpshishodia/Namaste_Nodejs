@@ -12,7 +12,8 @@ const fs = require("fs");
 // -----------------------------
 // Setting up cloudinary with credentials from .env
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // your cloud name
+  // Fallback supports a common typo in your .env (CLOUDNARY_CLOUD_NAME).
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDNARY_CLOUD_NAME, // your cloud name
   api_key: process.env.CLOUDINARY_API_KEY,       // API key
   api_secret: process.env.CLOUDINARY_API_SECRET, // API secret
 });
