@@ -1,38 +1,47 @@
 ## Professional Backend Setup – Routes & Controllers
 
-This project is a **Node.js + Express + MongoDB** backend, structured in a professional way with separate layers for the app configuration, database connection, models, middleware, and services.
+Express + MongoDB API with a clear split between **routes**, **controllers**, **models**, **middleware** (Multer), and **services** (Cloudinary).
 
-### Tech Stack
+### Tech stack
 
-- **Runtime**: Node.js
-- **Framework**: Express
-- **Database**: MongoDB (via Mongoose)
-- **Auth & Security**: JSON Web Tokens (JWT), bcrypt
-- **File Uploads**: Multer
-- **Media Storage**: Cloudinary
-- **Validation**: validator
+| Piece | Package |
+|--------|---------|
+| Runtime | Node.js |
+| HTTP | Express **5.x** |
+| Database | MongoDB via **Mongoose 9.x** |
+| Passwords | bcrypt |
+| Tokens | jsonwebtoken (helpers on User model) |
+| Uploads | Multer → disk (`public/temp`) |
+| Media CDN | Cloudinary |
+| Validation | validator (e.g. email on User schema) |
 
-### Project Structure (important files)
+### Folder map
 
-- `server.js` – Entry point. Connects to MongoDB and starts the HTTP server using the Express app from `src/app.js`.
-- `src/app.js` – Configures the Express app (CORS, JSON parsing, URL-encoded parsing, static files, cookies). This is where you would plug in your routes/controllers.
-- `src/DB/Database.js` – Sets up and exports the MongoDB connection function.
-- `src/models/user.model.js` – Mongoose model for users, including password hashing, JWT token helpers, and validations.
-- `src/models/video.model.js` – Mongoose model for videos, with fields for URLs, owner, views, likes, etc., and an aggregate pagination plugin.
-- `src/middlewares/multer.js` – Multer configuration for handling file uploads to a temporary folder.
-- `src/services/cloudinaryService.js` – Helper to upload files from the temp folder to Cloudinary and then remove them locally.
+| Path | Purpose |
+|------|---------|
+| `server.js` | Loads `.env`, connects MongoDB, starts the server on `PORT` (default **8000**). |
+| `src/app.js` | Express app: CORS, JSON, cookies, static `public`, mounts **`/api/v1/users`**. |
+| `src/routes/user.route.js` | User routes; **`POST /register`** uses Multer `fields` for files. |
+| `src/controllers/user.controller.js` | Register handler: validate body → files → Cloudinary → `User.create`. |
+| `src/middlewares/multer.js` | Saves uploads under **`./public/temp`** (create this folder if missing). |
+| `src/services/cloudinaryService.js` | Uploads local file to Cloudinary, deletes temp file, returns result (`.url`). |
+| `src/DB/Database.js` | `mongoose.connect` using `MONGO_URI` + `DB_NAME`. |
+| `src/models/user.model.js` | User schema, **async** `pre("save")` password hash (no `next`). |
+| `src/models/video.model.js` | Video schema + aggregate pagination plugin. |
+| `src/constants.js` | Shared constants (extend as needed). |
 
-### Environment Variables (.env)
+### Environment variables
 
-Create a `.env` file in the root of this folder with values similar to:
+Add a **`.env`** in the project root (do not commit secrets).
 
 ```env
 PORT=8000
 
-MONGO_URI=mongodb://localhost:27017
+MONGO_URI=mongodb+srv://USER:PASS@cluster.mongodb.net
 DB_NAME=your_database_name
 
-CLOUDINARY_CLOUD_NAME=your_cloud_name
+# Must match src/services/cloudinaryService.js — this repo reads CLOUDNARY_CLOUD_NAME (spelling as in code)
+CLOUDNARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
@@ -44,25 +53,51 @@ REFRESH_TOKEN_EXPIRY=7d
 CORS_ORIGIN=http://localhost:3000
 ```
 
-Adjust the values according to your local setup or deployment configuration.
+If you rename `CLOUDNARY_CLOUD_NAME` to `CLOUDINARY_CLOUD_NAME` in `.env`, update `cloudinaryService.js` to use the same variable name.
 
-### How to Run Locally
+### Run locally
 
-1. Install dependencies:
+```bash
+npm install
+node server.js
+```
 
-   ```bash
-   npm install
-   ```
+The process listens **after** MongoDB connects. Base URL: `http://localhost:8000` (or your `PORT`).
 
-2. Start the server:
+### API: register user
 
-   ```bash
-   node server.js
-   ```
+| | |
+|---|---|
+| **Method** | `POST` |
+| **URL** | `/api/v1/users/register` |
+| **Full URL** | `http://localhost:<PORT>/api/v1/users/register` |
+| **Content-Type** | `multipart/form-data` (not raw JSON) |
 
-3. The server will start **after MongoDB connects successfully**, and listen on `PORT` from `.env` or fallback `8000`.
+**Text fields (form-data)**
+
+- `firstName` — at least 4 characters after trim  
+- `lastName`  
+- `email`  
+- `password`  
+
+**File fields — names must match exactly (case-sensitive)**
+
+- `avatar` — one file  
+- `coverImage` — at least one file (route allows up to 3)  
+
+**Success:** `201` with a message and `createdUser` (password and refresh token omitted).
+
+### Troubleshooting
+
+| Issue | What to check |
+|--------|----------------|
+| `MulterError: Unexpected field` | File keys are not exactly `avatar` and `coverImage`. |
+| `Invalid fields in request` | Extra text keys in `req.body`; only the four allowed fields. |
+| `next is not a function` | Fixed in `user.model.js`: do not mix `async` pre-save hooks with `next()`. |
+| Upload / Cloudinary errors | `CLOUDNARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` in `.env` and Cloudinary dashboard. |
+| Mongo connection fails | `MONGO_URI`, Atlas network access, VPN/DNS. |
+| Missing temp path | Ensure **`public/temp`** exists or Multer destination will error. |
 
 ### Author
 
 Created by **Karan _Shishodia_**.
-
