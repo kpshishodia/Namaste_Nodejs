@@ -10,11 +10,12 @@ const fs = require("fs");
 // -----------------------------
 // ☁️ Cloudinary Configuration
 // -----------------------------
-// Setting up cloudinary with credentials from .env
+// Variable names must match your .env exactly. This project uses CLOUDNARY_CLOUD_NAME
+// (typo of CLOUDINARY); rename in .env to CLOUDINARY_CLOUD_NAME if you prefer the standard name.
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // your cloud name
-  api_key: process.env.CLOUDINARY_API_KEY,       // API key
-  api_secret: process.env.CLOUDINARY_API_SECRET, // API secret
+  cloud_name: process.env.CLOUDNARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // -----------------------------
@@ -56,8 +57,5 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-// -----------------------------
-// 📦 Export Function
-// -----------------------------
-// Makes this function usable in other files (like controllers)
-module.exports = uploadOnCloudinary ;
+// Default export: import with `const uploadOnCloudinary = require("...")` (no { } needed)
+module.exports = uploadOnCloudinary;

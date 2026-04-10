@@ -34,12 +34,10 @@ const userSchema = new Schema(
       trim: true,
     },
 
-    // ⚧ Gender field with custom validation
+    // Gender: optional; if sent, must be one of the allowed strings (validator runs when value is set)
     gender: {
       type: String,
-      required: true,
       validate(value) {
-        // only allow specific values
         if (!["male", "female", "others"].includes(value)) {
           throw new Error("Gender is not valid.");
         }
@@ -71,7 +69,7 @@ const userSchema = new Schema(
     // 🎂 Age of user
     age: {
       type: Number,
-      required: true,
+      // required: true,
     },
 
     // 📝 About section (bio)
@@ -118,14 +116,11 @@ const userSchema = new Schema(
 // -----------------------------
 // 🔐 Pre-save Hook (Password Hashing)
 // -----------------------------
-userSchema.pre("save", async function (next) {
-  // Only hash password if it is modified
-  if (!this.isModified("password")) return next();
-
-  // Hash password with salt rounds = 10
+// Async document middleware: do not use `next`. Only callback-style hooks use next().
+// Hash only when password field changes (e.g. create + password updates).
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
-
-  next();
 });
 
 // -----------------------------

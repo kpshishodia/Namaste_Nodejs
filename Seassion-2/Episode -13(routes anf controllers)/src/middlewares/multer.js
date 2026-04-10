@@ -1,5 +1,5 @@
-
-const multer  = require('multer')
+// Saves uploaded files to ./public/temp — ensure that folder exists before uploads.
+const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
