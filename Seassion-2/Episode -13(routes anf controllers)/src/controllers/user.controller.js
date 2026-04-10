@@ -1,4 +1,5 @@
 const User = require("../models/user.model")
+// cloudinaryService exports the upload function as default: const fn = require(...)
 const uploadOnCloudinary = require("../services/cloudinaryService.js")
 
 // steps to register user 
@@ -16,6 +17,7 @@ const uploadOnCloudinary = require("../services/cloudinaryService.js")
 
 const registerUserController = async (req, res) => {
   try {
+    // Register uses multipart/form-data: Multer runs first (see user.route.js), then this handler runs.
     // 1. Get user details from frontend (Postman / client request)
     const { firstName, lastName, email, password } = req.body;
 
@@ -31,6 +33,7 @@ const registerUserController = async (req, res) => {
     const allowedFields = ["firstName", "lastName", "email", "password"];
 
     // Extract keys (field names) from request body
+    // (With multipart, only text parts appear in req.body; file parts are in req.files.)
     const requestFields = Object.keys(req.body);
 
     // Check if every field sent by user is allowed
@@ -57,6 +60,7 @@ const registerUserController = async (req, res) => {
     }
 
     // 3 . check if user already exist
+    // $or: finds a document if either condition matches (email or same plaintext password — unusual; often only email is checked)
 
   const existedUser = await User.findOne({
   $or: [
@@ -75,6 +79,7 @@ if (existedUser) {
 // 4 . check for images , check for avatar
 
 // getting files we gettion from multer fileUpload middleware
+// Multer puts files under req.files.<fieldName> as an array; [0].path is the temp disk path (see multer middleware).
 
 // Avatar
 const uploadedFileAvatarLocalPath = req.files?.avatar[0]?.path
@@ -93,6 +98,7 @@ if(!uploadedFileAvatarLocalPath || !uploadedFileCoverImageLocalPath){
 
 
 // 5 . upload them to cloudinary service
+// uploadOnCloudinary uploads from local path, deletes the temp file, returns Cloudinary result (includes .url).
 
 
 // avatar
@@ -112,6 +118,7 @@ if(!uploadedFileCoverImageLocalPathResult || !uploadedFileAvatarLocalPathResult 
 
 
 // 6 . create user object == create entry in DB
+// User.create triggers userSchema pre("save"): password is hashed before persist; plain password is not stored.
 
 const user = await User.create({
   firstName: firstName.toLowerCase(),
@@ -125,6 +132,7 @@ const user = await User.create({
 console.log("user :" , user)
 
 // 7 . remove password and refresh token field from response
+// .select("-password -refreshtoken") omits those fields from the JSON-safe document.
 
 const createdUser = await User.findById(user._id).select(
   "-password -refreshtoken"
@@ -146,6 +154,7 @@ if(!createdUser){
     // ----------------------------------------------------
     //  Error handling
     // If anything unexpected goes wrong
+    // Catches thrown Errors, validation errors, and failed awaits; sends message to client.
     // ----------------------------------------------------
     return res.status(400).json({
       message: "Bad request",
