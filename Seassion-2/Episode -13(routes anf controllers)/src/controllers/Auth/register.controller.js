@@ -1,6 +1,6 @@
-const User = require("../models/user.model")
+const User = require("../../models/user.model.js")
 // cloudinaryService exports the upload function as default: const fn = require(...)
-const uploadOnCloudinary = require("../services/cloudinaryService.js")
+const uploadOnCloudinary = require("../../services/cloudinaryService.js")
 
 // steps to register user 
 

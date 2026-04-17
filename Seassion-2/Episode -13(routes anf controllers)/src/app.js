@@ -5,7 +5,7 @@ require("dotenv").config();
 const express = require("express");
 const cookierParser = require("cookie-parser");
 const cors = require("cors"); // Required for handling Cross-Origin requests
-const userRouter = require("./routes/user.route");
+const userRouter = require("./routes/auth.route");
 
 // Create an Express application
 const app = express();

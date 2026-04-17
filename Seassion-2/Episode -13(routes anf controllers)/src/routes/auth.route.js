@@ -1,5 +1,6 @@
 const express = require("express");
-const registerUserController = require("../controllers/user.controller.js");
+const registerUserController = require("../controllers/Auth/register.controller.js");
+const loginUserController = require("../controllers/Auth/login.controller.js")
 const userRouter = express.Router();
 
 // Multer instance: saves uploads under ./public/temp (see middlewares/multer.js)
@@ -14,5 +15,9 @@ userRouter.route("/register").post(
   ]),
   registerUserController
 );
+
+userRouter.route("/login").post(
+  loginUserController
+)
 
 module.exports = userRouter;
