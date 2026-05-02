@@ -1,5 +1,5 @@
 // Saves uploaded files to ./public/temp — ensure that folder exists before uploads.
-const multer = require("multer");
+import multer from "multer";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -13,4 +13,4 @@ const storage = multer.diskStorage({
 
 const fileUpload = multer({ storage: storage })
  
-module.exports = fileUpload
+export default fileUpload

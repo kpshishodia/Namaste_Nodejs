@@ -1,11 +1,13 @@
 // Load environment variables from .env file into process.env
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+
 
 // Import required packages
-const express = require("express");
-const cookierParser = require("cookie-parser");
-const cors = require("cors"); // Required for handling Cross-Origin requests
-const userRouter = require("./routes/auth.route");
+import express from "express"
+import cookieParser from "cookie-parser";
+import cors from "cors"// Required for handling Cross-Origin requests
+import userRouter from "./routes/auth.route.js";
 
 // Create an Express application
 const app = express();
@@ -37,11 +39,11 @@ app.use(express.static("public"));
 
 // Middleware to parse cookies from incoming requests
 // Cookies will be available in req.cookies
-app.use(cookierParser());
+app.use(cookieParser());
 
 // Mount user routes under /api/v1/users
 // Example: POST /api/v1/users/register
 app.use("/api/v1/users", userRouter);
 
 // Export the app so it can be used in server.js or index.js
-module.exports = app;
+export default  app;

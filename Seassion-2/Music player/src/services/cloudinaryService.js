@@ -1,11 +1,12 @@
-require("dotenv").config(); 
+import dotenv from "dotenv";
+dotenv.config();
 // 📦 Loads environment variables from .env file into process.env
 
-// Import cloudinary using CommonJS syntax
-const cloudinary = require("cloudinary").v2;
+// Import cloudinary using Ed module syntax
+import { v2 as cloudinary } from "cloudinary";
 
 // File system module (used to delete local files after upload)
-const fs = require("fs");
+import fs from "fs";
 
 // -----------------------------
 // ☁️ Cloudinary Configuration
@@ -58,4 +59,4 @@ const uploadOnCloudinary = async (localFilePath) => {
 };
 
 // Default export: import with `const uploadOnCloudinary = require("...")` (no { } needed)
-module.exports = uploadOnCloudinary;
+export default uploadOnCloudinary;

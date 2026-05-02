@@ -1,14 +1,14 @@
 
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 // Used for validating email format
-const validator = require("validator");
+import validator from"validator";
 
 // JWT for authentication (access & refresh tokens)
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 // bcrypt for hashing passwords securely
-const bcrypt = require("bcrypt");
+import bcrypt from "bcrypt";
 
 const { Schema } = mongoose;
 
@@ -17,21 +17,10 @@ const { Schema } = mongoose;
 // -----------------------------
 const userSchema = new Schema(
   {
-    // 🧑 First Name of user
-    firstName: {
-      type: String,
-      required: true,
-      minLength: 4,
-      maxlength: 20,
-      lowercase: true, // converts to lowercase before saving
-      trim: true, // removes extra spaces
-    },
-
-    // 🧑 Last Name of user
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
+    userName : {
+        type: String,
+        required: true,
+        unique: true
     },
 
     // Gender: optional; if sent, must be one of the allowed strings (validator runs when value is set)
@@ -82,30 +71,12 @@ const userSchema = new Schema(
     skills: {
       type: [String],
     },
-
-    // 🖼 Profile image URL (stored in cloud like Cloudinary)
-    avatar: {
-      type: String,
-      required: true,
-    },
-
-    // 🖼 Cover image (optional)
-    coverImage: {
-      type: String,
-    },
-
-    // 🎥 Watch history (array of Video references)
-    watchHistory: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Video", // connects to Video model
-      },
-    ],
-
-    // 🔄 Refresh token (stored in DB for session management)
-    refreshtoken: {
-      type: String,
-    },
+ 
+    role: {
+        type: String,
+        enum: ["user" , "artist"],
+        default: "user"
+    }
   },
   {
     // 🕒 Automatically adds createdAt & updatedAt
@@ -177,4 +148,4 @@ const User = mongoose.model(
 // -----------------------------
 // 📦 Export Model
 // -----------------------------
-module.exports = User;
+export default  User;

@@ -1,11 +1,12 @@
 // Load environment variables from .env (PORT, DB config, etc.)
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 // Function that connects to MongoDB
-const ConnectToDB = require("./src/DB/Database");
+import ConnectToDB from "./src/DB/Database.js"
 
 // Import the configured Express app (middlewares, routes, etc.)
-const app = require("./src/app");
+import app from "./src/app.js"
 
 // Prefer PORT from .env, but fall back to 8000 for local dev
 const port = process.env.PORT || 8000;

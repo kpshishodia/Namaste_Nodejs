@@ -1,6 +1,5 @@
-const User = require("../../models/user.model.js")
-// cloudinaryService exports the upload function as default: const fn = require(...)
-const uploadOnCloudinary = require("../../services/cloudinaryService.js")
+import User from "../../models/user.model.js"
+
 
 // steps to register user 
 
@@ -19,10 +18,10 @@ const registerUserController = async (req, res) => {
   try {
     // Register uses multipart/form-data: Multer runs first (see user.route.js), then this handler runs.
     // 1. Get user details from frontend (Postman / client request)
-    const { firstName, lastName, email, password } = req.body;
+    const { userName, email, password } = req.body;
 
     // Debugging (to check incoming data)
-    console.log("email:", email, "firstName:", firstName);
+    console.log("email:", email, "userName:", userName);
 
     // ----------------------------------------------------
     // 2. Allowed fields validation
@@ -30,7 +29,7 @@ const registerUserController = async (req, res) => {
     // This prevents users from sending unwanted data like "role", "isAdmin", etc.
     // ----------------------------------------------------
 
-    const allowedFields = ["firstName", "lastName", "email", "password"];
+    const allowedFields = ["userName", "email", "password"];
 
     // Extract keys (field names) from request body
     // (With multipart, only text parts appear in req.body; file parts are in req.files.)
@@ -53,10 +52,10 @@ const registerUserController = async (req, res) => {
 
     // !firstName → handles undefined, null, empty string
     // trim() → removes extra spaces ("   ")
-    if (!firstName || firstName.trim().length < 4) {
+    if (!userName || userName.trim().length < 4) {
       return res
         .status(400)
-        .send("firstName should be at least 4 characters long");
+        .send("userName should be at least 4 characters long");
     }
 
     // 3 . check if user already exist
@@ -76,55 +75,11 @@ if (existedUser) {
 }
 
 
-// 4 . check for images , check for avatar
-
-// getting files we gettion from multer fileUpload middleware
-// Multer puts files under req.files.<fieldName> as an array; [0].path is the temp disk path (see multer middleware).
-
-// Avatar
-const uploadedFileAvatarLocalPath = req.files?.avatar[0]?.path
-
-console.log("uploadedFileAvatarLocalPath : " , uploadedFileAvatarLocalPath)
-
-// coverImage
-
-const uploadedFileCoverImageLocalPath = req.files?.coverImage[0]?.path
-
-console.log("uploadedFileCoverImageLocalPath : " , uploadedFileCoverImageLocalPath)
-
-if(!uploadedFileAvatarLocalPath || !uploadedFileCoverImageLocalPath){
-  throw new Error("Avatar and CoverImage required.")
-}
-
-
-// 5 . upload them to cloudinary service
-// uploadOnCloudinary uploads from local path, deletes the temp file, returns Cloudinary result (includes .url).
-
-
-// avatar
-
-const uploadedFileAvatarLocalPathResult = await uploadOnCloudinary(uploadedFileAvatarLocalPath)
-
-console.log("uploadedFileAvatarLocalPathResult : " , uploadedFileAvatarLocalPathResult)
-
-// coverImage
-
-const uploadedFileCoverImageLocalPathResult = await uploadOnCloudinary(uploadedFileCoverImageLocalPath)
-console.log("uploadedFileCoverImageLocalPathResult : " , uploadedFileCoverImageLocalPathResult)
-
-if(!uploadedFileCoverImageLocalPathResult || !uploadedFileAvatarLocalPathResult ){
-  throw new Error("avatar file or coverimage file failed to upload on cloudinary.")
-}
-
-
 // 6 . create user object == create entry in DB
 // User.create triggers userSchema pre("save"): password is hashed before persist; plain password is not stored.
 
 const user = await User.create({
-  firstName: firstName.toLowerCase(),
-  lastName: lastName.toLowerCase(),
-  avatar: uploadedFileAvatarLocalPathResult.url,
-  coverImage: uploadedFileCoverImageLocalPathResult.url,
+  userName: userName.toLowerCase(),
   email,
   password
 })
@@ -163,4 +118,4 @@ if(!createdUser){
   }
 };
 
-module.exports = registerUserController;
+export default registerUserController;

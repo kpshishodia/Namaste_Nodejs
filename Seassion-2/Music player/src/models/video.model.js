@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
+import  mongoose from "mongoose";
 
 // Plugin used for pagination with aggregation queries
-const mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const { Schema } = mongoose;
 
@@ -92,4 +92,4 @@ const Video = mongoose.model(
 // -----------------------------
 // 📦 Export Model
 // -----------------------------
-module.exports = Video;
+export default Video;
