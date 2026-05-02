@@ -38,19 +38,19 @@ const loginUserController = async (req, res) => {
       });
     }
 
-    // // 5. generate tokens
-    // const accessToken = await user.generateAccessToken();
-    // const refreshToken = await user.generateRefreshToken();
+    // 5. generate tokens
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
 
-    // // save refresh token in DB
-    // user.refreshtoken = refreshToken;
-    // await user.save({ validateBeforeSave: false });
+    // save refresh token in DB
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     // 6. send response
     return res.status(200).json({
       message: "Login successful",
-    //   accessToken,
-    //   refreshToken,
+      accessToken,
+      refreshToken,
       user,
     });
 
