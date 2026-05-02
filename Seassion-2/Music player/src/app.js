@@ -8,6 +8,7 @@ import express from "express"
 import cookieParser from "cookie-parser";
 import cors from "cors"// Required for handling Cross-Origin requests
 import userRouter from "./routes/auth.route.js";
+import musicRouter from "./routes/music.routes.js";
 
 // Create an Express application
 const app = express();
@@ -43,7 +44,9 @@ app.use(cookieParser());
 
 // Mount user routes under /api/v1/users
 // Example: POST /api/v1/users/register
-app.use("/api/v1/users", userRouter);
+app.use("/api/v1/auth", userRouter);
+
+app.use("/api/v1/music", musicRouter)
 
 // Export the app so it can be used in server.js or index.js
 export default  app;

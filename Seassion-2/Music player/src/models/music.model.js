@@ -8,10 +8,10 @@ const { Schema } = mongoose;
 // -----------------------------
 // 📹 Video Schema Definition
 // -----------------------------
-const videoSchema = new Schema(
+const musicSchema = new Schema(
   {
     // 🎥 Stores video file URL (Cloudinary / S3 / local path)
-    videoFile: {
+    musicFile: {
       type: String,
       required: true, // must be provided
     },
@@ -78,18 +78,18 @@ const videoSchema = new Schema(
 // 🔌 Apply Pagination Plugin
 // -----------------------------
 // Adds aggregatePaginate() method (aggregatePaginate) to the schema
-videoSchema.plugin(mongooseAggregatePaginate);
+musicSchema.plugin(mongooseAggregatePaginate);
 
 // -----------------------------
 // 🧠 Create Model
 // -----------------------------
-const Video = mongoose.model(
-  "Video", // Model name (used in code)
-  videoSchema,
-  "ytvideo" // Collection name in MongoDB
+const Music = mongoose.model(
+  "Music", // Model name (used in code)
+  musicSchema,
+  "ytmusic" // Collection name in MongoDB
 );
 
 // -----------------------------
 // 📦 Export Model
 // -----------------------------
-export default Video;
+export default Music;
