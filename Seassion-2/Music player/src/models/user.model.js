@@ -76,7 +76,12 @@ const userSchema = new Schema(
         type: String,
         enum: ["user" , "artist"],
         default: "user"
-    }
+    },
+    
+    // 🔄 Store refresh token in DB
+refreshToken: {
+  type: String,
+}
   },
   {
     // 🕒 Automatically adds createdAt & updatedAt
@@ -110,7 +115,7 @@ userSchema.methods.generateAccessToken = async function () {
     {
       _id: this._id,
       email: this.email,
-      firstName: this.firstName,
+      userName: this.userName,
     },
     process.env.ACCESS_TOKEN_SECRET, // secret key from .env
     {
@@ -127,7 +132,7 @@ userSchema.methods.generateRefreshToken = async function () {
     {
       _id: this._id,
       email: this.email,
-      firstName: this.firstName,
+      userName: this.userName,
     },
     process.env.REFRESH_TOKEN_SECRET, // separate secret for refresh token
     {
