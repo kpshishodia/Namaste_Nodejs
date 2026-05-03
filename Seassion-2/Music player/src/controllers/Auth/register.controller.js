@@ -1,16 +1,38 @@
 import User from "../../models/user.model.js";
 
+
 // ----------------------------------------------------
 // REGISTER USER CONTROLLER
 // ----------------------------------------------------
 
-// Steps:
-// 1. Get user data from frontend
-// 2. Validate incoming fields
-// 3. Check if user already exists
-// 4. Create user in DB
-// 5. Generate access & refresh tokens
-// 6. Send response
+// Flow / Pseudo Code:
+//
+// 1. Get user data from frontend request
+//
+// 2. Validate allowed incoming fields
+//    - prevent unwanted fields
+//
+// 3. Validate required fields & input data
+//    - username
+//    - email
+//    - password
+//    - role
+//
+// 4. Check if user already exists in database
+//
+// 5. Create user document in MongoDB
+//    - password automatically hashed by schema middleware
+//
+// 6. Generate JWT access & refresh tokens
+//    - using schema methods
+//
+// 7. Save refresh token in database
+//
+// 8. Remove sensitive fields from response
+//
+// 9. Configure cookie options
+//
+// 10. Send cookies + success response
 
 const registerUserController = async (req, res) => {
   try {
@@ -18,7 +40,7 @@ const registerUserController = async (req, res) => {
     // 1. Get data from frontend (Postman / client)
     // ----------------------------------------------------
 
-    const { userName, email, password } = req.body;
+    const { userName, email, password , role} = req.body;
 
     // Debugging
     console.log("email:", email, "userName:", userName);
@@ -29,7 +51,7 @@ const registerUserController = async (req, res) => {
     // role, isAdmin, etc.
     // ----------------------------------------------------
 
-    const allowedFields = ["userName", "email", "password"];
+    const allowedFields = ["userName", "email", "password", "role"];
 
     // Get all keys sent by frontend
     const requestFields = Object.keys(req.body);
@@ -57,6 +79,7 @@ const registerUserController = async (req, res) => {
       });
     }
 
+
     // Check email
     if (!email) {
       return res.status(400).json({
@@ -68,6 +91,14 @@ const registerUserController = async (req, res) => {
     if (!password || password.length < 6) {
       return res.status(400).json({
         message: "Password should be at least 6 characters long",
+      });
+    }
+ 
+    // check role
+
+    if(!role){
+       return res.status(400).json({
+        message: "Role is required",
       });
     }
 
@@ -99,6 +130,7 @@ const registerUserController = async (req, res) => {
       userName: userName.toLowerCase(),
       email: email.toLowerCase(),
       password,
+      role,
     });
 
     console.log("Created user :", user);
@@ -119,22 +151,46 @@ const registerUserController = async (req, res) => {
     console.log("Access Token :", accessToken);
     console.log("Refresh Token :", refreshToken);
 
+
+      // ------------------------------------------------
+    // 7. Save refresh token
+    // ------------------------------------------------
+
+    user.refreshToken = refreshToken;
+
+    await user.save({
+      validateBeforeSave: false,
+    });
     // ----------------------------------------------------
-    // 7. Remove sensitive data from response
+    // 8. Remove sensitive data from response
     // ----------------------------------------------------
 
     // Fetch fresh user without password
     const createdUser = await User.findById(user._id).select("-password");
 
+
+    // ------------------------------------------------
+    // 9. Cookie options
+    // ------------------------------------------------
+
+    const options = {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    };
     // ----------------------------------------------------
-    // 8. Send success response
+    // 10.  Send cookies and  success response
     // ----------------------------------------------------
 
-    return res.status(201).json({
+    return res.status(201)
+    .cookie("accessToken", accessToken, options)
+
+      .cookie("refreshToken", refreshToken, options)
+
+    .json({
       message: "User successfully registered",
       user: createdUser,
       accessToken,
-      refreshToken,
     });
 
   } catch (error) {

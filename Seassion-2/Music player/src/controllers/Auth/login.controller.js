@@ -42,15 +42,28 @@ const loginUserController = async (req, res) => {
     const accessToken = await user.generateAccessToken();
     const refreshToken = await user.generateRefreshToken();
 
-    // save refresh token in DB
+    // 6. save refresh token in DB
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
-    // 6. send response
-    return res.status(200).json({
+    // ------------------------------------------------
+    // 7. Cookie options
+    // ------------------------------------------------
+
+    const options = {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    };
+
+    // 8. send cookies and response
+ 
+    return res.status(200)
+    .cookie("accessToken", accessToken, options)
+
+      .cookie("refreshToken", refreshToken, options)
+    .json({
       message: "Login successful",
-      accessToken,
-      refreshToken,
       user,
     });
 
