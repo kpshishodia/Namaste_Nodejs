@@ -116,6 +116,7 @@ userSchema.methods.generateAccessToken = async function () {
       _id: this._id,
       email: this.email,
       userName: this.userName,
+      role: this.role,
     },
     process.env.ACCESS_TOKEN_SECRET, // secret key from .env
     {
@@ -133,6 +134,7 @@ userSchema.methods.generateRefreshToken = async function () {
       _id: this._id,
       email: this.email,
       userName: this.userName,
+      role: this.role,
     },
     process.env.REFRESH_TOKEN_SECRET, // separate secret for refresh token
     {

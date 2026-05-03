@@ -1,8 +1,16 @@
 import Music from "../../models/music.model"
 
-const musicController = async (req , res) => {
+
+const createMusic = async (req , res) => {
     try {
-        
+        const refreshToken = req.cookies.refreshToken
+        const accessToken = req.cookies.accessToken
+
+        if(!refreshToken || !accessToken){
+            return res.status(401).json({
+                message : "Unauthorize Acces you are forbidden!."
+            })
+        }
     } catch (error) {
         // ----------------------------------------------------
     // Error handling
@@ -15,4 +23,4 @@ const musicController = async (req , res) => {
     }
 }
 
-export default musicController
+export default createMusic
