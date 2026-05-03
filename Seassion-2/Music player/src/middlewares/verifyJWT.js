@@ -6,17 +6,16 @@ const verifyJWT = async (req,res,next) => {
         
 
         // ------------------------------------------------
-    // Get access token from cookies
+    // Get access token from cookies (refresh token is only for /refresh)
     // ------------------------------------------------
 
- const refreshToken = req.cookies.refreshToken
- const accessToken = req.cookies.accessToken
+        const accessToken = req.cookies.accessToken;
 
-        if(!refreshToken || !accessToken){
+        if (!accessToken) {
             return res.status(401).json({
-                message : "Unauthorize Acces you are forbidden!."
-            })
-        }  
+                message: "Unauthorize Acces you are forbidden!.",
+            });
+        }
 
 
 
@@ -24,17 +23,16 @@ const verifyJWT = async (req,res,next) => {
     // Verify token
     // ------------------------------------------------
 
-    const decodedRefreshToken = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET
+    const decoded = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET
     );
 
-
-     // ------------------------------------------------
+    // ------------------------------------------------
     // Store decoded user data in request
     // ------------------------------------------------
 
-    req.user = decodedToken;
+    req.user = decoded;
 
     // Continue to next middleware/controller
     next();
