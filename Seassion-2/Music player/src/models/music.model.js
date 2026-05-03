@@ -6,7 +6,7 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 const { Schema } = mongoose;
 
 // -----------------------------
-// 📹 Video Schema Definition
+// Music  Schema Definition
 // -----------------------------
 const musicSchema = new Schema(
   {
@@ -22,7 +22,7 @@ const musicSchema = new Schema(
       required: true,
     },
 
-    // 📝 Title of the video
+    // 📝 Title of the music
     title: {
       type: String,
       required: true,
@@ -41,14 +41,14 @@ const musicSchema = new Schema(
       required: true,
     },
 
-    // 👤 Reference to the user who uploaded the video
-    owner: {
+    // 👤 Reference to the user who uploaded the music
+    artist: {
       type: Schema.Types.ObjectId,
       ref: "User", // links this field to User collection
       required: true,
     },
 
-    // 👀 Number of views on the video
+    // 👀 Number of views on the music
     views: {
       type: Number,
       default: 0, // starts from 0
