@@ -1,52 +1,37 @@
-// Load environment variables from .env file into process.env
-import dotenv from "dotenv";
-dotenv.config();
-
-
-// Import required packages
-import express from "express"
+import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
-import cors from "cors"// Required for handling Cross-Origin requests
+
 import userRouter from "./routes/auth.route.js";
 import musicRouter from "./routes/music.routes.js";
 
-// Create an Express application
 const app = express();
 
-// ----------------------------
-// Middleware Section
-// ----------------------------
-
-// Enable CORS (Cross-Origin Resource Sharing)
-// This allows your backend to accept requests from a different frontend origin (like React app)
+// CORS config allows browser clients to send cookies cross-origin.
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN, // Allow requests only from this origin (defined in .env)
-    credentials: true, // Allow cookies and authentication headers to be sent
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    credentials: true,
   })
 );
 
-// Middleware to parse incoming JSON data
-// Example: req.body will contain parsed JSON from frontend
-app.use(express.json());
-
-// Middleware to parse URL-encoded data (from forms)
-// extended: true allows parsing nested objects
-app.use(express.urlencoded({ extended: true }));
-
-// Serve static files from "public" folder
-// Example: images, CSS files, etc. can be accessed directly
-app.use(express.static("public"));
-
-// Middleware to parse cookies from incoming requests
-// Cookies will be available in req.cookies
+// Request body and cookie parsers.
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 
-// Mount user routes under /api/v1/users
-// Example: POST /api/v1/users/register
+// Serve static assets if needed.
+app.use(express.static("public"));
+
+// Health check route.
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    message: "Music Player API is running",
+  });
+});
+
+// API routes.
 app.use("/api/v1/auth", userRouter);
+app.use("/api/v1/music", musicRouter);
 
-app.use("/api/v1/music", musicRouter)
-
-// Export the app so it can be used in server.js or index.js
-export default  app;
+export default app;

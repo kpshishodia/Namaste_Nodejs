@@ -24,13 +24,14 @@ Backend for a music-style app: **auth** (register / login with JWT cookies) and 
 | `src/app.js` | Express app: CORS, JSON, cookies, static `public`, mounts **`/api/v1/auth`** and **`/api/v1/music`**. |
 | `src/routes/auth.route.js` | `POST /register`, `POST /login`. |
 | `src/routes/music.routes.js` | Protected music routes (e.g. create). |
-| `src/controllers/Auth/register.controller.js` | Register: validate body → `User.create` → JWT → httpOnly cookies. |
-| `src/controllers/Auth/login.controller.js` | Login: email/password → tokens → cookies. |
+| `src/controllers/Auth/register.controller.js` | Register: validate body → `User.create` → `generateAccessAndRefreshTokens()` → httpOnly cookies. |
+| `src/controllers/Auth/login.controller.js` | Login: email/password → schema token methods → cookies. |
 | `src/controllers/Music/music.controller.js` | Music handlers (extend for uploads / persistence). |
 | `src/middlewares/verifyJWT.js` | Reads `accessToken` / `refreshToken` from cookies and verifies JWT. |
 | `src/middlewares/role.js` | Ensures `role === "artist"` for artist-only routes. |
 | `src/middlewares/multer.js` | Saves uploads under **`./public/temp`**. |
 | `src/services/cloudinaryService.js` | Uploads local file to Cloudinary, deletes temp file. |
+| `src/utils/generateTokens.js` | Shared helper to generate access/refresh tokens and persist refresh token. |
 | `src/DB/Database.js` | `mongoose.connect` using `MONGO_URI` + `DB_NAME`. |
 | `src/models/user.model.js` | User schema, async `pre("save")` password hash; collection **`ytuser`**. |
 | `src/models/music.model.js` | Music schema + aggregate pagination plugin; collection **`ytmusic`**. |
@@ -71,6 +72,8 @@ The server starts **after** MongoDB connects. Base URL: `http://localhost:8000` 
 
 Ensure **`public/temp`** exists before using Multer uploads.
 
+If startup fails with a module error for `src/app.js`, create that file (Express bootstrap) or update the import path in `server.js` to your actual app entry file.
+
 ### API overview
 
 #### Register user
@@ -89,6 +92,7 @@ Ensure **`public/temp`** exists before using Multer uploads.
 - `role` — `"user"` or `"artist"` (matches User schema enum)
 
 **Success:** `201` with message, `user` (without password), `accessToken` in JSON, and **httpOnly** cookies: `accessToken`, `refreshToken`.
+Register flow uses `src/utils/generateTokens.js` to generate/store tokens in one shared place.
 
 #### Login
 

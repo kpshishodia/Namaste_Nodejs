@@ -5,8 +5,10 @@ const userRouter = express.Router();
 
 
 
-// POST /api/v1/users/register — multipart/form-data only (not raw JSON).
-// File field names MUST match exactly: "avatar" and "coverImage" (case-sensitive).
+// Auth route map:
+// POST /api/v1/auth/register -> create user account
+// POST /api/v1/auth/login    -> authenticate existing user
+// Register currently expects JSON body as implemented in controller.
 userRouter.route("/register").post(
   registerUserController
 );

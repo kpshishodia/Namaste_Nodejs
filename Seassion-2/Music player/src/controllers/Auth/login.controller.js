@@ -1,23 +1,33 @@
 import User from "../../models/user.model.js"
+import generateAccessAndRefreshTokens from "../../utils/generateTokens.js";
+
 
 
 // ----------------------
 // LOGIN USER
 // ----------------------
+// Flow:
+// 1) Read credentials from request body
+// 2) Validate required fields
+// 3) Find user by email
+// 4) Compare password using schema method
+// 5) Generate JWT tokens
+// 6) Save refresh token in DB
+// 7) Send cookies + success response
 const loginUserController = async (req, res) => {
   try {
-    // 1. get data from frontend
+    // Step 1: get data from frontend
     const { email, password } = req.body;
     console.log("login:" , email , password)
 
-    // 2. validation
+    // Step 2: basic validation
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and Password required",
       });
     }
 
-    // 3. check user exists
+    // Step 3: check user exists by normalized email
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     console.log("login : " , user)
 
@@ -29,7 +39,7 @@ const loginUserController = async (req, res) => {
       });
     }
 
-    // 4. compare password
+    // Step 4: compare plain password with hashed password from DB
     const isMatch = await user.isPasswordCorrect(password);
 
     if (!isMatch) {
@@ -38,14 +48,17 @@ const loginUserController = async (req, res) => {
       });
     }
 
-    // 5. generate tokens
-    const accessToken = await user.generateAccessToken();
-    const refreshToken = await user.generateRefreshToken();
-
-    // 6. save refresh token in DB
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
+     // ----------------------------------------------------
+        // 6. Generate Tokens (via shared utility)
+        // ----------------------------------------------------
+    
+        // Utility internally:
+        // - fetches user
+        // - generates access/refresh tokens through schema methods
+        // - saves refresh token in DB
+        const { accessToken, refreshToken } =
+          await generateAccessAndRefreshTokens(user._id);
+    
     // ------------------------------------------------
     // 7. Cookie options
     // ------------------------------------------------
@@ -56,7 +69,7 @@ const loginUserController = async (req, res) => {
       sameSite: "strict",
     };
 
-    // 8. send cookies and response
+    // Step 8: send secure cookies + response payload
  
     return res.status(200)
     .cookie("accessToken", accessToken, options)

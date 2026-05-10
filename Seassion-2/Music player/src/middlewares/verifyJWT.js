@@ -6,7 +6,9 @@ const verifyJWT = async (req,res,next) => {
         
 
         // ------------------------------------------------
-    // Get access token from cookies (refresh token is only for /refresh)
+    // Get access token from cookies.
+    // This middleware currently validates only access token.
+    // (Refresh token verification should happen in a dedicated refresh endpoint.)
     // ------------------------------------------------
 
         const accessToken = req.cookies.accessToken;
@@ -20,7 +22,7 @@ const verifyJWT = async (req,res,next) => {
 
 
         // ------------------------------------------------
-    // Verify token
+    // Verify JWT signature + expiry using ACCESS_TOKEN_SECRET.
     // ------------------------------------------------
 
     const decoded = jwt.verify(
@@ -29,12 +31,12 @@ const verifyJWT = async (req,res,next) => {
     );
 
     // ------------------------------------------------
-    // Store decoded user data in request
+    // Store decoded claims on req.user for downstream middlewares/controllers.
     // ------------------------------------------------
 
     req.user = decoded;
 
-    // Continue to next middleware/controller
+    // Continue request lifecycle.
     next();
     } catch (error) {
          return res.status(400).json({
