@@ -1,49 +1,57 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
 
+const verifyJWT = async (req, res, next) => {
+  try {
 
-const verifyJWT = async (req,res,next) => {
-    try {
-        
+    // -----------------------------------------
+    // Get access token from cookies
+    // -----------------------------------------
+    const accessToken = req.cookies.accessToken;
 
-        // ------------------------------------------------
-    // Get access token from cookies.
-    // This middleware currently validates only access token.
-    // (Refresh token verification should happen in a dedicated refresh endpoint.)
-    // ------------------------------------------------
+    // If token missing
+    if (!accessToken) {
+      return res.status(401).json({
+        message: "Unauthorized access",
+      });
+    }
 
-        const accessToken = req.cookies.accessToken;
-
-        if (!accessToken) {
-            return res.status(401).json({
-                message: "Unauthorize Acces you are forbidden!.",
-            });
-        }
-
-
-
-        // ------------------------------------------------
-    // Verify JWT signature + expiry using ACCESS_TOKEN_SECRET.
-    // ------------------------------------------------
-
+    // -----------------------------------------
+    // Verify token
+    // -----------------------------------------
     const decoded = jwt.verify(
       accessToken,
       process.env.ACCESS_TOKEN_SECRET
     );
 
-    // ------------------------------------------------
-    // Store decoded claims on req.user for downstream middlewares/controllers.
-    // ------------------------------------------------
+    // -----------------------------------------
+    // Find user from DB
+    // -----------------------------------------
+    const user = await User.findById(decoded?._id)
+      .select("-password -refreshToken");
 
-    req.user = decoded;
+    // If user not found
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid access token",
+      });
+    }
 
-    // Continue request lifecycle.
+    // -----------------------------------------
+    // Attach user to request
+    // -----------------------------------------
+    req.user = user;
+
+    // Continue to next middleware/controller
     next();
-    } catch (error) {
-         return res.status(400).json({
-       message: "Invalid or expired token",
+
+  } catch (error) {
+
+    return res.status(401).json({
+      message: "Invalid or expired token",
       error: error.message,
     });
-    }
-}
+  }
+};
 
-export default verifyJWT
+export default verifyJWT;
