@@ -1,6 +1,8 @@
 import express from "express"
 import registerUserController from "../controllers/Auth/register.controller.js"
 import loginUserController from "../controllers/Auth/login.controller.js"
+import logOutController from "../controllers/Auth/logOut.controller.js"
+import verifyJWT from "../middlewares/verifyJWT.js"
 const userRouter = express.Router();
 
 
@@ -16,6 +18,12 @@ userRouter.route("/register").post(
 
 userRouter.route("/login").post(
   loginUserController
+)
+
+// protected route
+
+userRouter.route("/logout").post(
+  verifyJWT , logOutController
 )
 
 export default  userRouter;
