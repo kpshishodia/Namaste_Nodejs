@@ -1,8 +1,10 @@
-## Music Player API (Express + MongoDB)
+# Music Player API (Express + MongoDB)
 
-Backend for a music-style app: **auth** (register / login with JWT cookies) and **music** routes with role-based access. Structure follows **routes → controllers → models → middleware → services** (Namaste Node.js style).
+Backend for a music-style app: **JWT cookie auth** (register, login, logout) and **artist-only music upload** to Cloudinary with MongoDB persistence. Layout follows **routes → controllers → models → middleware → services** (Namaste Node.js style).
 
-### Tech stack
+For a step-by-step walkthrough of only the auth wiring, see [`CODEBASE_SEQUENCE_GUIDE.md`](./CODEBASE_SEQUENCE_GUIDE.md).
+
+## Tech stack
 
 | Piece | Package |
 |--------|---------|
@@ -11,34 +13,39 @@ Backend for a music-style app: **auth** (register / login with JWT cookies) and 
 | Database | MongoDB via **Mongoose 9.x** |
 | Passwords | bcrypt |
 | Tokens | jsonwebtoken (methods on User model) |
-| Uploads (ready for use) | Multer → disk (`public/temp`) |
-| Media CDN (ready for use) | Cloudinary |
+| Uploads | Multer → disk (`public/temp`) |
+| Media CDN | Cloudinary |
 | Validation | validator (email on User schema) |
 | Pagination plugin | mongoose-aggregate-paginate-v2 (on Music schema) |
 
-### Folder map
+## Project layout
 
 | Path | Purpose |
 |------|---------|
 | `server.js` | Loads `.env`, connects MongoDB, starts the server on `PORT` (default **8000**). |
-| `src/app.js` | Express app: CORS, JSON, cookies, static `public`, mounts **`/api/v1/auth`** and **`/api/v1/music`**. |
-| `src/routes/auth.route.js` | `POST /register`, `POST /login`. |
-| `src/routes/music.routes.js` | Protected music routes (e.g. create). |
-| `src/controllers/Auth/register.controller.js` | Register: validate body → `User.create` → `generateAccessAndRefreshTokens()` → httpOnly cookies. |
-| `src/controllers/Auth/login.controller.js` | Login: email/password → schema token methods → cookies. |
-| `src/controllers/Music/music.controller.js` | Music handlers (extend for uploads / persistence). |
-| `src/middlewares/verifyJWT.js` | Reads `accessToken` / `refreshToken` from cookies and verifies JWT. |
+| `src/app.js` | Express app: CORS, JSON, cookies, static `public`, mounts **`/api/v1/auth`** and **`/api/v1/music`**. Root `GET /` returns a small JSON health message. |
+| `src/routes/auth.route.js` | `POST /register`, `POST /login`, `POST /logout` (logout protected by JWT). |
+| `src/routes/music.routes.js` | `POST /create-music` — JWT + artist role + Multer. |
+| `src/controllers/Auth/*.js` | Register, login, logout handlers. |
+| `src/controllers/Music/music.controller.js` | Create music: Multer file → Cloudinary → `Music.create` with placeholder thumbnail. |
+| `src/middlewares/verifyJWT.js` | Reads **`accessToken`** from cookies, verifies JWT, attaches `req.user`. |
 | `src/middlewares/role.js` | Ensures `role === "artist"` for artist-only routes. |
-| `src/middlewares/multer.js` | Saves uploads under **`./public/temp`**. |
+| `src/middlewares/multer.js` | Saves uploads under **`./public/temp`** (max **25 MB** per file). |
 | `src/services/cloudinaryService.js` | Uploads local file to Cloudinary, deletes temp file. |
-| `src/utils/generateTokens.js` | Shared helper to generate access/refresh tokens and persist refresh token. |
+| `src/utils/generateTokens.js` | Generates access/refresh tokens and persists refresh token on the user. |
 | `src/DB/Database.js` | `mongoose.connect` using `MONGO_URI` + `DB_NAME`. |
-| `src/models/user.model.js` | User schema, async `pre("save")` password hash; collection **`ytuser`**. |
+| `src/models/user.model.js` | User schema, password hash on save; collection **`ytuser`**. |
 | `src/models/music.model.js` | Music schema + aggregate pagination plugin; collection **`ytmusic`**. |
 
-### Environment variables
+## Prerequisites
 
-Add a **`.env`** in the project root (do not commit secrets).
+- Node.js (LTS recommended)
+- MongoDB (local or Atlas)
+- Cloudinary account (for `POST /api/v1/music/create-music`)
+
+## Environment variables
+
+Create a **`.env`** in the project root (do not commit secrets).
 
 ```env
 PORT=8000
@@ -59,9 +66,9 @@ REFRESH_TOKEN_EXPIRY=7d
 CORS_ORIGIN=http://localhost:3000
 ```
 
-If you rename `CLOUDNARY_CLOUD_NAME` to `CLOUDINARY_CLOUD_NAME` in `.env`, update `cloudinaryService.js` to use the same variable name.
+If you prefer `CLOUDINARY_CLOUD_NAME` in `.env`, rename the variable in `cloudinaryService.js` to match.
 
-### Run locally
+## Run locally
 
 ```bash
 npm install
@@ -70,13 +77,13 @@ node server.js
 
 The server starts **after** MongoDB connects. Base URL: `http://localhost:8000` (or your `PORT`).
 
-Ensure **`public/temp`** exists before using Multer uploads.
+Create **`public/temp`** before uploading files (Multer destination).
 
-If startup fails with a module error for `src/app.js`, create that file (Express bootstrap) or update the import path in `server.js` to your actual app entry file.
+## API overview
 
-### API overview
+All paths below are relative to the server origin (for example `http://localhost:8000`).
 
-#### Register user
+### Register
 
 | | |
 |---|---|
@@ -84,17 +91,16 @@ If startup fails with a module error for `src/app.js`, create that file (Express
 | **URL** | `/api/v1/auth/register` |
 | **Content-Type** | `application/json` |
 
-**Body (JSON)** — only these keys are accepted:
+**Body** — only these keys are accepted:
 
 - `userName` — at least 4 characters after trim (stored lowercase)
 - `email` — required, valid email format
 - `password` — at least 6 characters
 - `role` — `"user"` or `"artist"` (matches User schema enum)
 
-**Success:** `201` with message, `user` (without password), `accessToken` in JSON, and **httpOnly** cookies: `accessToken`, `refreshToken`.
-Register flow uses `src/utils/generateTokens.js` to generate/store tokens in one shared place.
+**Success:** `201` with message, `user` (without password), `accessToken` in JSON, and **httpOnly** cookies: `accessToken`, `refreshToken`. Tokens are created via `src/utils/generateTokens.js`.
 
-#### Login
+### Login
 
 | | |
 |---|---|
@@ -104,28 +110,47 @@ Register flow uses `src/utils/generateTokens.js` to generate/store tokens in one
 
 **Body:** `email`, `password`.
 
-**Success:** `200` with message and `user`, plus the same cookie pair. Send requests with `credentials: "include"` from the browser if the frontend is on another origin.
+**Success:** `200` with message and `user`, plus the same cookie pair. From a browser on another origin, send requests with `credentials: "include"` so cookies are stored and sent.
 
-#### Create music (artist only)
+### Logout
+
+| | |
+|---|---|
+| **Method** | `POST` |
+| **URL** | `/api/v1/auth/logout` |
+| **Auth** | Valid **`accessToken`** cookie (`verifyJWT`). |
+
+Clears the **`refreshToken`** field on the user document server-side. Clear cookies on the client as well if you want the session fully gone in the browser.
+
+### Create music (artist only)
 
 | | |
 |---|---|
 | **Method** | `POST` |
 | **URL** | `/api/v1/music/create-music` |
-| **Auth** | Valid `accessToken` and `refreshToken` cookies; user must have **`role: "artist"`**. |
+| **Content-Type** | `multipart/form-data` |
+| **Auth** | Valid **`accessToken`** cookie; user must have **`role: "artist"`**. |
 
-Extend the controller to accept files or JSON, upload via Cloudinary if needed, and persist with the `Music` model (`musicFile`, `thumbnail`, `title`, `duration`, `artist`, etc.).
+**Form fields:**
 
-### Troubleshooting
+- **`musicFile`** — one audio file (field name must match exactly).
+- **`title`** — non-empty string.
+- **`duration`** — duration in **seconds** (positive number).
+
+Flow: file saved under `public/temp` → uploaded to Cloudinary → `Music` document created with `musicFile` URL, **`thumbnail`** set to a placeholder image URL, `artist` set to the authenticated user’s id. Response **`201`** with `message` and populated `data` (artist fields: `userName`, `email`, `role`).
+
+## Troubleshooting
 
 | Issue | What to check |
 |--------|----------------|
 | `Invalid fields in request` (register) | Body must only include `userName`, `email`, `password`, `role`. |
-| `401` / forbidden on music routes | Log in first; cookies must be sent; user must be an **artist** for create-music. |
-| Upload / Cloudinary errors | `.env` keys and Cloudinary dashboard; temp folder exists. |
+| `401` on protected routes | Log in first; send **`accessToken`** cookie (protected routes use the access token, not the refresh token). |
+| Forbidden on create-music | User must be an **artist**. |
+| `Send one file as form-data field: musicFile` | Use multipart field name **`musicFile`**. |
+| Upload / Cloudinary errors | `.env` Cloudinary keys; `public/temp` exists; file under 25 MB. |
 | Mongo connection fails | `MONGO_URI`, Atlas IP allowlist, VPN/DNS. |
 | CORS / no cookies from frontend | `CORS_ORIGIN` matches your app URL; client uses credentials on fetch/axios. |
 
-### Author
+## Author
 
 Created by **Karan _Shishodia_**.
