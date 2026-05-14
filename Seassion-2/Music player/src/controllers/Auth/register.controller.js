@@ -2,6 +2,7 @@ import User from "../../models/user.model.js";
 import generateAccessAndRefreshTokens from "../../utils/generateTokens.js";
 
 
+
 // ----------------------------------------------------
 // REGISTER USER CONTROLLER
 // ----------------------------------------------------
@@ -38,7 +39,7 @@ import generateAccessAndRefreshTokens from "../../utils/generateTokens.js";
 // This controller handles end-to-end user registration.
 // It validates input, creates the user, creates tokens, stores refresh token,
 // and returns both cookies + sanitized user data.
-const registerUserController = async (req, res) => {
+const registerUserController = async  (req, res) => {
   try {
     // ----------------------------------------------------
     // 1. Get data from frontend (Postman / client)

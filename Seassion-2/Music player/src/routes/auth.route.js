@@ -5,6 +5,7 @@ const userRouter = express.Router();
 
 
 
+
 // Auth route map:
 // POST /api/v1/auth/register -> create user account
 // POST /api/v1/auth/login    -> authenticate existing user
