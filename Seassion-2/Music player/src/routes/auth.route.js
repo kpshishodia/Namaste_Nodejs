@@ -2,6 +2,7 @@ import express from "express"
 import registerUserController from "../controllers/Auth/register.controller.js"
 import loginUserController from "../controllers/Auth/login.controller.js"
 import logOutController from "../controllers/Auth/logOut.controller.js"
+import refreshAccessToken from "../controllers/Auth/refreshAccessToken.controller.js"
 import verifyJWT from "../middlewares/verifyJWT.js"
 const userRouter = express.Router();
 
@@ -24,6 +25,10 @@ userRouter.route("/login").post(
 
 userRouter.route("/logout").post(
   verifyJWT , logOutController
+)
+
+userRouter.route("/refresh-token").poat(
+  verifyJWT , refreshAccessToken
 )
 
 export default  userRouter;
