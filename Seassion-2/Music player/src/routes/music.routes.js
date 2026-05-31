@@ -1,3 +1,9 @@
+// ============================================================
+// src/routes/music.routes.js — music API routes
+// ============================================================
+// Mounted at: /api/v1/music (see src/app.js)
+// ============================================================
+
 import express from "express"
 import verifyJWT from "../middlewares/verifyJWT.js";
 import createMusic from "../controllers/Music/music.controller.js";

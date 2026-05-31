@@ -1,3 +1,10 @@
+// ----------------------------------------------------
+// user.model.js — User schema and auth helpers
+// ----------------------------------------------------
+// Collection: ytuser (see mongoose.model third argument)
+// pre("save"): hash password when modified
+// methods: isPasswordCorrect, generateAccessToken, generateRefreshToken
+// ----------------------------------------------------
 
 import mongoose from "mongoose";
 

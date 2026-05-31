@@ -1,3 +1,14 @@
+// ----------------------------------------------------
+// verifyJWT middleware
+// ----------------------------------------------------
+// Flow / Pseudo Code:
+// 1. Read accessToken from cookies
+// 2. Reject if token is missing
+// 3. Verify JWT with ACCESS_TOKEN_SECRET
+// 4. Load user from DB (exclude password and refreshToken)
+// 5. Attach user to req.user and call next()
+// ----------------------------------------------------
+
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 

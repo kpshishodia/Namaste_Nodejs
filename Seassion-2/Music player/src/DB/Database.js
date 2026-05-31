@@ -1,3 +1,12 @@
+// ----------------------------------------------------
+// Database.js — MongoDB connection
+// ----------------------------------------------------
+// Flow / Pseudo Code:
+// 1. Read MONGO_URI and DB_NAME from .env
+// 2. Build connection URL and call mongoose.connect
+// 3. On failure, log and re-throw so server.js does not start listening
+// ----------------------------------------------------
+
 import dotenv from "dotenv";
 dotenv.config();
 

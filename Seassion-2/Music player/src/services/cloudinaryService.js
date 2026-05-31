@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 // 📦 Loads environment variables from .env file into process.env
 
-// Import cloudinary using Ed module syntax
+// Import Cloudinary SDK (ES module syntax)
 import { v2 as cloudinary } from "cloudinary";
 
 // File system module (used to delete local files after upload)
@@ -22,7 +22,12 @@ cloudinary.config({
 // -----------------------------
 // 📤 Upload Function
 // -----------------------------
-// This function uploads a file from local storage to Cloudinary
+// Flow / Pseudo Code:
+// 1. If no local path, return early
+// 2. Upload file to Cloudinary (resource_type: auto)
+// 3. Delete local temp file after success
+// 4. Return upload result (url, public_id, etc.) to controller
+// On error: delete temp file if present, return null
 const uploadOnCloudinary = async (localFilePath) => {
   try {
     // ❌ If file path is not provided, exit early

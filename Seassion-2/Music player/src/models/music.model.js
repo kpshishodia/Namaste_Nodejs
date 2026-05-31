@@ -1,3 +1,10 @@
+// ----------------------------------------------------
+// music.model.js — Music schema
+// ----------------------------------------------------
+// Collection: ytmusic
+// Plugin: mongoose-aggregate-paginate-v2 for future list/pagination APIs
+// ----------------------------------------------------
+
 import  mongoose from "mongoose";
 
 // Plugin used for pagination with aggregation queries

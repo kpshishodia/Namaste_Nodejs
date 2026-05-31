@@ -1,3 +1,12 @@
+// ----------------------------------------------------
+// verifyArtist middleware (role check)
+// ----------------------------------------------------
+// Flow / Pseudo Code:
+// 1. req.user is set by verifyJWT on the same route
+// 2. Allow next() only if req.user.role === "artist"
+// 3. Otherwise return 403
+// ----------------------------------------------------
+
 const verifyArtist = (req, res, next) => {
 
   // req.user is attached by verifyJWT middleware from token payload.

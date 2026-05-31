@@ -1,4 +1,10 @@
-// Saves uploaded files to ./public/temp — ensure that folder exists before uploads.
+// ----------------------------------------------------
+// multer.js — disk storage for file uploads
+// ----------------------------------------------------
+// Saves uploaded files to ./public/temp — create that folder before first upload.
+// Used on music route: fileUpload.single("musicFile")
+// ----------------------------------------------------
+
 import multer from "multer";
 
 const storage = multer.diskStorage({

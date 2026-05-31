@@ -3,10 +3,10 @@ import generateAccessAndRefreshTokens from "../../utils/generateTokens.js";
 
 
 
-// ----------------------
-// LOGIN USER
-// ----------------------
-// Flow:
+// ----------------------------------------------------
+// LOGIN USER CONTROLLER
+// ----------------------------------------------------
+// Flow / Pseudo Code:
 // 1) Read credentials from request body
 // 2) Validate required fields
 // 3) Find user by email
@@ -14,6 +14,7 @@ import generateAccessAndRefreshTokens from "../../utils/generateTokens.js";
 // 5) Generate JWT tokens
 // 6) Save refresh token in DB
 // 7) Send cookies + success response
+// ----------------------------------------------------
 const loginUserController = async (req, res) => {
   try {
     // Step 1: get data from frontend

@@ -1,3 +1,18 @@
+// ----------------------------------------------------
+// REFRESH ACCESS TOKEN CONTROLLER
+// ----------------------------------------------------
+// Flow / Pseudo Code:
+//
+// 1. Get refresh token from cookie or request body
+// 2. Check token exists
+// 3. Verify refresh token signature and expiry
+// 4. Find user in database
+// 5. Match refresh token with value stored in DB
+// 6. Generate new access and refresh tokens (shared utility)
+// 7. Set cookie options
+// 8. Send new tokens in cookies + JSON response
+// ----------------------------------------------------
+
 import jwt from "jsonwebtoken";
 import User from "../../models/user.model.js";
 import generateAccessAndRefreshTokens from "../../utils/generateTokens.js";
@@ -6,13 +21,13 @@ const refreshAccessToken = async (req, res) => {
   try {
 
     // ------------------------------------------------
-    // Get refresh token
+    // 1. Get refresh token
     // ------------------------------------------------
     const incomingRefreshToken =
       req.cookies.refreshToken || req.body.refreshToken;
 
     // ------------------------------------------------
-    // Check token exists
+    // 2. Check token exists
     // ------------------------------------------------
     if (!incomingRefreshToken) {
       return res.status(401).json({
@@ -21,7 +36,7 @@ const refreshAccessToken = async (req, res) => {
     }
 
     // ------------------------------------------------
-    // Verify refresh token
+    // 3. Verify refresh token
     // ------------------------------------------------
     const decodedRefreshToken = jwt.verify(
       incomingRefreshToken,
@@ -29,7 +44,7 @@ const refreshAccessToken = async (req, res) => {
     );
 
     // ------------------------------------------------
-    // Find user
+    // 4. Find user
     // ------------------------------------------------
     const user = await User.findById(decodedRefreshToken?._id);
 
@@ -40,7 +55,7 @@ const refreshAccessToken = async (req, res) => {
     }
 
     // ------------------------------------------------
-    // Match refresh token with DB
+    // 5. Match refresh token with DB
     // ------------------------------------------------
     if (incomingRefreshToken !== user.refreshToken) {
       return res.status(401).json({
@@ -49,13 +64,13 @@ const refreshAccessToken = async (req, res) => {
     }
 
     // ------------------------------------------------
-    // Generate new tokens
+    // 6. Generate new tokens
     // ------------------------------------------------
     const { accessToken, newRefreshToken } =
       await generateAccessAndRefreshTokens(user._id);
 
     // ------------------------------------------------
-    // Cookie options
+    // 7. Cookie options
     // ------------------------------------------------
     const options = {
       httpOnly: true,
@@ -64,7 +79,7 @@ const refreshAccessToken = async (req, res) => {
     };
 
     // ------------------------------------------------
-    // Send response
+    // 8. Send response
     // ------------------------------------------------
     return res
       .status(200)
