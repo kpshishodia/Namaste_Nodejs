@@ -17,6 +17,7 @@ import logOutController from "../controllers/Auth/logout.controller.js"
 import refreshAccessToken from "../controllers/Auth/refreshAccessToken.js"
 import verifyJWT from "../middlewares/verifyJWT.js"
 import getProfileController from "../controllers/Auth/getProfile.controller.js"
+import updatePaswwordController from "../controllers/Profile/updatePassword.controller.js"
 const userRouter = express.Router();
 
 // Public routes — no verifyJWT
@@ -40,6 +41,10 @@ userRouter.route("/refresh-token").post(
 
 userRouter.route("/profile").get(
   verifyJWT , getProfileController
+)
+
+userRouter.route("/updatePassword").patch(
+  verifyJWT , updatePaswwordController
 )
 
 export default  userRouter;
