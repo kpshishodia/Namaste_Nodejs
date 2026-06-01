@@ -46,4 +46,4 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
-export default generateRefreshToken;
+export default generateAccessAndRefreshTokens;

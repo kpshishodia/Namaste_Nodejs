@@ -1,4 +1,4 @@
-import User from "../../models/user.model";
+
 
 
 const getProfileController = async (req,res) => {

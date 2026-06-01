@@ -14,7 +14,7 @@ const updatePaswwordController = async(req,res) => {
             })
         }
 
-        // 2. find user by _id i ma getting user from req bcs of veriJWT middleware
+        // 2. find user by _id i am  getting user from req bcs of veriJWT middleware
 
         const user = User.findById(req.user._id)
 
@@ -24,6 +24,28 @@ const updatePaswwordController = async(req,res) => {
                 error: error.message
             })
         }
+
+        // 3 . match password usin ispasswordcorrect method from user by verifyJWT middleware
+
+        const isMatch = user.isPasswordCorrect(oldPassword)
+
+        if(!isMatch){
+            return res.status(400).json({
+                message: "password mismatch.",
+                error : error.message
+            })
+        }
+
+        // 4 . make sure  new passwrd and confirm password match
+
+        if(newPassword  !== confirmPassword){
+            return res.status(400).json({
+                message : "newpassowrd and confirmpassword should match.",
+                error : error.message
+            })
+        }
+
+        // 5 . save new password 
 
     }catch(error){
         return res.status(400).json({
