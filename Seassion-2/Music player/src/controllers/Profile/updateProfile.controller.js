@@ -50,14 +50,22 @@ const updateProfileController = async (req, res) => {
     if (email) {
       const existingUser = await User.findOne({ email });
 
-      if (
-        existingUser &&
-        existingUser._id.toString() !== user._id.toString()
-      ) {
-        return res.status(400).json({
-          message: "Email already exists.",
-        });
-      }
+//       const emailBelongsToSomeoneElse =
+//   existingUser &&
+//   existingUser._id.toString() !== user._id.toString();
+
+// if (emailBelongsToSomeoneElse) {
+//   return res.status(400).json({
+//     message: "Email already exists."
+//   });
+// }
+
+if(existingUser &&
+   existingUser._id.toString() !== user._id.toString() ){
+    return res.status(400).json({
+      message:"Email already exists."
+    })
+   }
     }
 
     // ----------------------------------------------------
