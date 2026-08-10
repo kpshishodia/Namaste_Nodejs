@@ -103,7 +103,11 @@ const userSchema = new Schema(
     ],
 
     // 🔄 Refresh token (stored in DB for session management)
-    refreshtoken: {
+    refreshToken: {
+      type: String,
+    },
+
+    accessToken:{
       type: String,
     },
   },

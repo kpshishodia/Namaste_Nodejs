@@ -39,6 +39,7 @@ const userSchema = new Schema(
         }
       },
       lowercase: true,
+      required: true,
     },
 
     // 📧 Email field (must be unique & valid)
@@ -65,7 +66,7 @@ const userSchema = new Schema(
     // 🎂 Age of user
     age: {
       type: Number,
-      // required: true,
+      required: true,
     },
 
     // 📝 About section (bio)
@@ -82,7 +83,8 @@ const userSchema = new Schema(
     role: {
         type: String,
         enum: ["user" , "artist"],
-        default: "user"
+        default: "user",
+        required: true,
     },
     
     // 🔄 Store refresh token in DB

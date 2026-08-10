@@ -51,40 +51,110 @@
 
 
 
+// const User = require("../models/user");
+// const jwt = require("jsonwebtoken");
+
+// const UserAuth = async (req, res, next) => {
+//   try {
+//     // 1️⃣ Get token from cookies
+//     const { token } = req.cookies;
+
+//     if (!token) {
+//       return res.status(401).send("Unauthorized: Token missing");
+//     }
+
+//     // 2️⃣ Verify token
+//     const decodedObj = jwt.verify(token, "Sample@746");
+
+//     const { _id } = decodedObj;
+
+//     // 3️⃣ Find user
+//     const user = await User.findById(_id);
+
+//     if (!user) {
+//       return res.status(401).send("Unauthorized: User not found");
+//     }
+
+//     // 4️⃣ Attach user to request
+//     req.user = user;
+
+//     // 5️⃣ Continue to next route
+//     next();
+
+//   } catch (error) {
+//     res.status(401).send("Authentication Failed: " + error.message);
+//   }
+// };
+
+// module.exports = { UserAuth };
+
+
+
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
 const UserAuth = async (req, res, next) => {
-  try {
-    // 1️⃣ Get token from cookies
-    const { token } = req.cookies;
+    try {
 
-    if (!token) {
-      return res.status(401).send("Unauthorized: Token missing");
+        const { token } = req.cookies;
+
+        console.log("token:", token);
+
+        if (!token) {
+            return res.status(400).json({
+                message: "Token is missing."
+            });
+        }
+
+
+        const decodeObj = jwt.verify(token, "TopSecret");
+
+
+        if (!decodeObj) {
+            return res.status(400).json({
+                message: "Invalid token."
+            });
+        }
+
+
+        const { _id } = decodeObj;
+
+
+        if (!_id) {
+            return res.status(400).json({
+                message: "User id not found."
+            });
+        }
+
+
+        const user = await User.findById(_id);
+
+
+        console.log("user:", user);
+
+
+        if (!user) {
+            return res.status(401).json({
+                message: "Unauthorized: User not found."
+            });
+        }
+
+
+        req.user = user;
+
+
+        next();
+
+
+    } catch (error) {
+
+        return res.status(400).json({
+            message: "Bad request.",
+            error: error.message
+        });
+
     }
-
-    // 2️⃣ Verify token
-    const decodedObj = jwt.verify(token, "Sample@746");
-
-    const { _id } = decodedObj;
-
-    // 3️⃣ Find user
-    const user = await User.findById(_id);
-
-    if (!user) {
-      return res.status(401).send("Unauthorized: User not found");
-    }
-
-    // 4️⃣ Attach user to request
-    req.user = user;
-
-    // 5️⃣ Continue to next route
-    next();
-
-  } catch (error) {
-    res.status(401).send("Authentication Failed: " + error.message);
-  }
 };
 
-module.exports = { UserAuth };
 
+module.exports = { UserAuth };

@@ -65,7 +65,14 @@ const userSchema = new Schema({
     
     skills : {
         type : [String]
-    }
+    } ,
+
+    stream: {
+    type: String,
+    required: true,
+    enum: ["science", "commerce", "arts"],
+    lowercase: true
+},
      
 
     // skills : {

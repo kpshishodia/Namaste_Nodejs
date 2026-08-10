@@ -11,17 +11,24 @@
 // ============================================================
 
 import express from "express"
-import registerUserController from "../controllers/Auth/register.controller.js"
-import loginUserController from "../controllers/Auth/login.controller.js"
-import logOutController from "../controllers/Auth/logout.controller.js"
-import refreshAccessToken from "../controllers/Auth/refreshAccessToken.js"
-import verifyJWT from "../middlewares/verifyJWT.js"
+// import registerUserController from "../controllers/Auth/register.controller.js"
+import registerUserController from "../controllers/Auth/register2.controller.js"
+import loginUserController from "../controllers/Auth/login2.controller.js"
+import logOutController from "../controllers/Auth/logout2.controller.js"
+import refreshAccessToken from "../controllers/Auth/refreshAccess2Token.js"
+import verifyJWT from "../middlewares/verify2JWT.js"
 import getProfileController from "../controllers/Auth/getProfile.controller.js"
-import updatePaswwordController from "../controllers/Profile/updatePassword.controller.js"
+import updatePaswwordController from "../controllers/Profile/updatePassword2.controller.js"
+import updateProfileController from "../controllers/Profile/updateProfile2.controller.js"
+import fileUpload from "../../src/middlewares/multer.js"
 const userRouter = express.Router();
 
 // Public routes — no verifyJWT
 userRouter.route("/register").post(
+  fileUpload.fields([
+    {name: "avatar" , maxCount: 1},
+    {name: "coverImage" , maxCount: 2}
+  ]),
   registerUserController
 );
 
@@ -29,14 +36,14 @@ userRouter.route("/login").post(
   loginUserController
 )
 
+userRouter.route("/refresh-token").post(
+  refreshAccessToken
+);
+
 // Protected routes — verifyJWT runs before controller
 
 userRouter.route("/logout").post(
   verifyJWT , logOutController
-)
-
-userRouter.route("/refresh-token").post(
-  verifyJWT , refreshAccessToken
 )
 
 userRouter.route("/profile").get(
@@ -45,6 +52,10 @@ userRouter.route("/profile").get(
 
 userRouter.route("/updatePassword").patch(
   verifyJWT , updatePaswwordController
+)
+
+userRouter.route("/updateProfile").patch(
+  verifyJWT , updateProfileController
 )
 
 export default  userRouter;

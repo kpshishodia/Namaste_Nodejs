@@ -1,5 +1,6 @@
 const User = require("../../models/user.model")
 
+
 // ----------------------
 // LOGIN USER
 // ----------------------
@@ -7,6 +8,7 @@ const loginUserController = async (req, res) => {
   try {
     // 1. get data from frontend
     const { email, password } = req.body;
+    console.log("login:" , email , password)
 
     // 2. validation
     if (!email || !password) {
@@ -16,7 +18,10 @@ const loginUserController = async (req, res) => {
     }
 
     // 3. check user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    console.log("login : " , user)
+
+
 
     if (!user) {
       return res.status(404).json({
@@ -33,19 +38,19 @@ const loginUserController = async (req, res) => {
       });
     }
 
-    // 5. generate tokens
-    const accessToken = await user.generateAccessToken();
-    const refreshToken = await user.generateRefreshToken();
+    // // 5. generate tokens
+    // const accessToken = await user.generateAccessToken();
+    // const refreshToken = await user.generateRefreshToken();
 
-    // save refresh token in DB
-    user.refreshtoken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+    // // save refresh token in DB
+    // user.refreshtoken = refreshToken;
+    // await user.save({ validateBeforeSave: false });
 
     // 6. send response
     return res.status(200).json({
       message: "Login successful",
-      accessToken,
-      refreshToken,
+    //   accessToken,
+    //   refreshToken,
       user,
     });
 

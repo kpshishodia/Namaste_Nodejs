@@ -1,163 +1,203 @@
-const User = require("../../models/user.model.js")
-// cloudinaryService exports the upload function as default: const fn = require(...)
-const uploadOnCloudinary = require("../../services/cloudinaryService.js")
 
-// steps to register user 
+// // steps to register user 
 
-// 1 . get user deatil from fronend (postman)
-// 2 . validations -- not empty -- require fields user can only send data which pass validation such as isEmail , isStrongPassword , etc.
-// 3 . check if user already exist -- return user already exist response
-// 4 . check for images , check for avatar
-// 5 . upload them to cloudinary service
-// 6 . extract url from cloudinay service response
-// 7 . create user object == create entry in DB
-// 8 . remove password and refresh token field from response
-// 9 . check for user creation 
-// 10 . return response
+// // 1 . get user deatil from fronend (postman)
+// // 2 . validations -- not empty -- require fields user can only send data which pass validation such as isEmail , isStrongPassword , etc.
+// // 3 . check if user already exist -- return user already exist response
+// // 4 . check for images , check for avatar
+// // 5 . upload them to cloudinary service
+// // 6 . extract url from cloudinay service response
+// // 7 . create user object == create entry in DB
+// // 8 . remove password and refresh token field from response
+// // 9 . check for user creation 
+// // 10 . return response
+
+
+
+const User = require("../../models/user.model.js");
+const uploadOnCloudinary = require("../../services/cloudinaryService.js");
+const ValidateSignUpdata = require("../../utils/Validation.js");
 
 const registerUserController = async (req, res) => {
   try {
-    // Register uses multipart/form-data: Multer runs first (see user.route.js), then this handler runs.
-    // 1. Get user details from frontend (Postman / client request)
-    const { firstName, lastName, email, password } = req.body;
+    // ============================================================
+    // 1. Get user data from request body (sent by the client)
+    // ============================================================
 
-    // Debugging (to check incoming data)
-    console.log("email:", email, "firstName:", firstName);
+    const { firstName, lastName, gender, email, password, age } = req.body;
 
-    // ----------------------------------------------------
-    // 2. Allowed fields validation
-    // Only allow specific fields from user
-    // This prevents users from sending unwanted data like "role", "isAdmin", etc.
-    // ----------------------------------------------------
+    // ============================================================
+    // 2. Validate that only allowed fields are sent in the request
+    // ============================================================
 
-    const allowedFields = ["firstName", "lastName", "email", "password"];
+    const allowedFields = [
+      "firstName",
+      "lastName",
+      "gender",
+      "email",
+      "password",
+      "age",
+    ];
 
-    // Extract keys (field names) from request body
-    // (With multipart, only text parts appear in req.body; file parts are in req.files.)
     const requestFields = Object.keys(req.body);
 
-    // Check if every field sent by user is allowed
-    const isValid = requestFields.every((field) =>
+    const isValidField = requestFields.every((field) =>
       allowedFields.includes(field)
     );
 
-    // If any extra field is found → reject request
-    if (!isValid) {
-      return res.status(400).send("Invalid fields in request");
+    if (!isValidField) {
+      return res.status(400).json({
+        message: "Invalid fields found in request body.",
+      });
     }
 
-    // ----------------------------------------------------
-    //  Field validation (firstName)
-    // Check if firstName exists and has minimum length
-    // ----------------------------------------------------
+    // ============================================================
+    // 3. Perform custom validation (empty fields, email format, etc.)
+    // ============================================================
 
-    // !firstName → handles undefined, null, empty string
-    // trim() → removes extra spaces ("   ")
-    if (!firstName || firstName.trim().length < 4) {
-      return res
-        .status(400)
-        .send("firstName should be at least 4 characters long");
+    ValidateSignUpdata(req.body);
+
+    // ============================================================
+    // 4. Check whether a user with the same email already exists
+    // ============================================================
+
+    const isUserAlreadyExist = await User.findOne({
+      email: email,
+    });
+
+    if (isUserAlreadyExist) {
+      return res.status(400).json({
+        message: "User already exists with this email.",
+      });
     }
 
-    // 3 . check if user already exist
-    // $or: finds a document if either condition matches (email or same plaintext password — unusual; often only email is checked)
+    console.log("Existing User :", isUserAlreadyExist);
 
-  const existedUser = await User.findOne({
-  $or: [
-    { email: email },
-    { password: password }
-  ]
-});
+    // ============================================================
+    // 5. Get uploaded files from Multer (stored temporarily on disk)
+    // ============================================================
+
+    const allFiles = req.files;
+
+    console.log("All Files :", allFiles);
+
+    const uploadedAvatarLocalPath = req.files?.avatar?.[0]?.path;
+    const uploadedCoverImageLocalPath =
+      req.files?.coverImage?.[0]?.path;
+
+    if (!uploadedAvatarLocalPath || !uploadedCoverImageLocalPath) {
+      return res.status(400).json({
+        message: "Avatar or Cover Image not found.",
+      });
+    }
+
+    console.log("Avatar Local Path :", uploadedAvatarLocalPath);
+    console.log("Cover Image Local Path :", uploadedCoverImageLocalPath);
+
+    // ============================================================
+    // 6. Upload images from local storage to Cloudinary
+    // ============================================================
+
+    const uploadedAvatarResult = await uploadOnCloudinary(
+      uploadedAvatarLocalPath
+    );
+
+    const uploadedCoverImageResult = await uploadOnCloudinary(
+      uploadedCoverImageLocalPath
+    );
+
+    if (!uploadedAvatarResult || !uploadedCoverImageResult) {
+      return res.status(400).json({
+        message: "Error uploading files to Cloudinary.",
+      });
+    }
+
+    console.log("Uploaded Avatar :", uploadedAvatarResult);
+    console.log("Uploaded Cover Image :", uploadedCoverImageResult);
+
+    // ============================================================
+    // 7. Create a new user in the database
+    // User.create() triggers the userSchema pre("save") middleware,
+    // where the password gets hashed before being stored.
+    // ============================================================
+
+    const user = await User.create({
+      firstName: firstName.toLowerCase(),
+      lastName: lastName.toLowerCase(),
+      gender,
+      email: email.toLowerCase().trim(),
+      password,
+      age,
+      avatar: uploadedAvatarResult.secure_url,
+      coverImage: uploadedCoverImageResult.secure_url,
+     
+    });
+  
+  
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Error creating user in database.",
+      });
+    }
 
 
-console.log("existedUser : " , existedUser)
-if (existedUser) {
-  throw new Error("User already exists with given email or password");
-}
+    // 8 .  accesstoken and refresh tojken from user model methods 
+    const accessToken = await user.generateAccessToken()
+    const refreshToken = await user.generateRefreshToken()
 
+    console.log(`accessToken : ${accessToken}`)
+    console.log(`refreshToken :${refreshToken}`)
 
-// 4 . check for images , check for avatar
+    // 9 . cookieOptions 
 
-// getting files we gettion from multer fileUpload middleware
-// Multer puts files under req.files.<fieldName> as an array; [0].path is the temp disk path (see multer middleware).
+    const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
-// Avatar
-const uploadedFileAvatarLocalPath = req.files?.avatar[0]?.path
+    // 10 . save refreshtoken in DB
 
-console.log("uploadedFileAvatarLocalPath : " , uploadedFileAvatarLocalPath)
+    user.refreshToken = refreshToken
 
-// coverImage
+    await user.save({
+      validateBeforeSave: false
 
-const uploadedFileCoverImageLocalPath = req.files?.coverImage[0]?.path
+    });
 
-console.log("uploadedFileCoverImageLocalPath : " , uploadedFileCoverImageLocalPath)
+    // ============================================================
+    // 11 . Fetch the newly created user while excluding sensitive fields
+    // ============================================================
 
-if(!uploadedFileAvatarLocalPath || !uploadedFileCoverImageLocalPath){
-  throw new Error("Avatar and CoverImage required.")
-}
+    const createdUser = await User.findById(user._id).select(
+      "-password -refreshToken "
+    );
 
+    if (!createdUser) {
+      return res.status(400).json({
+        message: "Error fetching created user.",
+      });
+    }
 
-// 5 . upload them to cloudinary service
-// uploadOnCloudinary uploads from local path, deletes the temp file, returns Cloudinary result (includes .url).
+    console.log("Created User :", createdUser);
 
+    // ============================================================
+    // 12. Send success response back to the client with cookie
+    // ============================================================
 
-// avatar
-
-const uploadedFileAvatarLocalPathResult = await uploadOnCloudinary(uploadedFileAvatarLocalPath)
-
-console.log("uploadedFileAvatarLocalPathResult : " , uploadedFileAvatarLocalPathResult)
-
-// coverImage
-
-const uploadedFileCoverImageLocalPathResult = await uploadOnCloudinary(uploadedFileCoverImageLocalPath)
-console.log("uploadedFileCoverImageLocalPathResult : " , uploadedFileCoverImageLocalPathResult)
-
-if(!uploadedFileCoverImageLocalPathResult || !uploadedFileAvatarLocalPathResult ){
-  throw new Error("avatar file or coverimage file failed to upload on cloudinary.")
-}
-
-
-// 6 . create user object == create entry in DB
-// User.create triggers userSchema pre("save"): password is hashed before persist; plain password is not stored.
-
-const user = await User.create({
-  firstName: firstName.toLowerCase(),
-  lastName: lastName.toLowerCase(),
-  avatar: uploadedFileAvatarLocalPathResult.url,
-  coverImage: uploadedFileCoverImageLocalPathResult.url,
-  email,
-  password
-})
-
-console.log("user :" , user)
-
-// 7 . remove password and refresh token field from response
-// .select("-password -refreshtoken") omits those fields from the JSON-safe document.
-
-const createdUser = await User.findById(user._id).select(
-  "-password -refreshtoken"
-)
-
-if(!createdUser){
-  throw new Error("somethin went wrong server unable to register user in DB.")
-}
-
-   // 9 . return response
-
-   return res.status(201).json({
-    message: "User successfully registered. ",
-    createdUser
-
-   })
-
+    return res.status(201)
+    .cookie("refreshToken" , refreshToken , cookieOptions)
+    .json({
+      message: "User successfully registered.",
+      createdUser,
+    });
   } catch (error) {
-    // ----------------------------------------------------
-    //  Error handling
-    // If anything unexpected goes wrong
-    // Catches thrown Errors, validation errors, and failed awaits; sends message to client.
-    // ----------------------------------------------------
-    return res.status(400).json({
-      message: "Bad request",
+    console.log("Register Controller Error :", error);
+
+    return res.status(500).json({
+      message: "Something went wrong while registering the user.",
       error: error.message,
     });
   }

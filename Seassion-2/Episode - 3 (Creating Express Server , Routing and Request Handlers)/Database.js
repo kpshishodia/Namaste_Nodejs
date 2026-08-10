@@ -1,4 +1,4 @@
-// Load environment variables from .env file
+  // Load environment variables from .env file
 require("dotenv").config();
 
 // Import MongoClient from mongodb package
