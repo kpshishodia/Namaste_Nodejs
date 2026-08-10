@@ -1,8 +1,8 @@
 # Music Player API (Express + MongoDB)
 
-Backend for a music-style app: **JWT cookie auth** (register, login, logout, refresh access token) and **artist-only music upload** to Cloudinary with MongoDB persistence. Structure follows **routes → controllers → models → middleware → services** (Namaste Node.js style).
+Backend for a music-style app with **JWT cookie auth**, **user profile management**, and **artist-only music upload** to Cloudinary. Structure follows **routes → controllers → models → middleware → services** (Namaste Node.js style).
 
-For a step-by-step walkthrough of auth wiring, see [`CODEBASE_SEQUENCE_GUIDE.md`](./CODEBASE_SEQUENCE_GUIDE.md).
+For auth execution order, see [`CODEBASE_SEQUENCE_GUIDE.md`](./CODEBASE_SEQUENCE_GUIDE.md).
 
 ## Tech stack
 
@@ -14,37 +14,46 @@ For a step-by-step walkthrough of auth wiring, see [`CODEBASE_SEQUENCE_GUIDE.md`
 | Passwords | bcrypt |
 | Tokens | jsonwebtoken (methods on User model) |
 | Uploads | Multer → disk (`public/temp`) |
-| Media CDN | Cloudinary |
-| Validation | validator (email on User schema) |
+| Media CDN | Cloudinary (`uploadOnCloudinary`, `deleteFromCloudinary`) |
+| Validation | validator (email, strong password) |
 | Pagination plugin | mongoose-aggregate-paginate-v2 (on Music schema) |
 
 ## Project layout
 
 | Path | Purpose |
 |------|---------|
-| `server.js` | Loads `.env`, connects MongoDB, starts the server on `PORT` (default **8000**). |
-| `src/app.js` | Express app: CORS, JSON, cookies, static `public`, mounts **`/api/v1/auth`** and **`/api/v1/music`**. `GET /` health check. |
-| `src/routes/auth.route.js` | Auth routes: register, login, logout, refresh-token. |
-| `src/routes/music.routes.js` | `POST /create-music` — JWT + artist role + Multer. |
-| `src/controllers/Auth/register.controller.js` | Register user, issue tokens, set cookies. |
-| `src/controllers/Auth/login.controller.js` | Login, issue tokens, set cookies. |
-| `src/controllers/Auth/logout.controller.js` | Clear refresh token in DB, clear auth cookies. |
-| `src/controllers/Auth/refreshAccessToken.js` | Issue new access/refresh tokens using valid refresh token. |
+| `server.js` | Loads `.env`, connects MongoDB, starts server on `PORT` (default **8000**). |
+| `src/app.js` | Express app: CORS, JSON, cookies, static `public`, mounts **`/api/v1/auth`** and **`/api/v1/music`**. |
+| `src/routes/auth.route.js` | Auth + profile routes (active v2 controllers). |
+| `src/routes/music.routes.js` | `POST /create-music` — JWT + artist + Multer. |
+| `src/controllers/Auth/register2.controller.js` | Register with avatar/cover upload → Cloudinary → tokens + cookies. |
+| `src/controllers/Auth/login2.controller.js` | Login with validation → tokens + cookies. |
+| `src/controllers/Auth/logout2.controller.js` | Logout: clear refresh token in DB + clear cookies. |
+| `src/controllers/Auth/refreshAccess2Token.js` | Public refresh route: new access/refresh tokens from cookie. |
+| `src/controllers/Auth/getProfile.controller.js` | Return logged-in user profile (`req.user`). |
+| `src/controllers/Profile/updatePassword2.controller.js` | Change password (current + new + confirm). |
+| `src/controllers/Profile/updateProfile2.controller.js` | Update profile text fields (and optional images when Multer is wired). |
 | `src/controllers/Music/music.controller.js` | Upload audio → Cloudinary → save `Music` document. |
-| `src/middlewares/verifyJWT.js` | Reads **`accessToken`** cookie, verifies JWT, sets `req.user`. |
-| `src/middlewares/role.js` | Allows only **`role: "artist"`** on music upload. |
-| `src/middlewares/multer.js` | Disk storage under **`./public/temp`** (max **25 MB**). |
-| `src/services/cloudinaryService.js` | Upload local file to Cloudinary, delete temp file. |
-| `src/utils/generateTokens.js` | Shared helper: generate tokens + save refresh token in DB. |
+| `src/middlewares/verify2JWT.js` | Auth middleware used on protected auth/profile routes. |
+| `src/middlewares/verifyJWT.js` | Auth middleware used on music routes. |
+| `src/middlewares/role.js` | Artist-only check for music upload. |
+| `src/middlewares/multer.js` | Disk storage under `./public/temp` (max **25 MB**). |
+| `src/utils/RegisterValidation.js` | Sign-up field validation (username, email, strong password, gender, age). |
+| `src/utils/LoginValidation.js` | Login email/password validation. |
+| `src/utils/generateTokens.js` | Shared token helper (used by older v1 auth controllers). |
+| `src/services/cloudinaryService.js` | Upload/delete files on Cloudinary. |
 | `src/DB/Database.js` | `mongoose.connect` using `MONGO_URI` + `DB_NAME`. |
 | `src/models/user.model.js` | User schema; collection **`ytuser`**. |
 | `src/models/music.model.js` | Music schema; collection **`ytmusic`**. |
+| `src/models/subscription.model.js` | Subscription schema (model scaffold; not mounted on routes yet). |
+
+> **Note:** Older v1 auth files (`register.controller.js`, `login.controller.js`, etc.) remain in the repo but are **not** wired in `auth.route.js`. Active routes use the `*2` controllers and `verify2JWT`.
 
 ## Prerequisites
 
 - Node.js (LTS recommended)
 - MongoDB (local or Atlas)
-- Cloudinary account (for music upload)
+- Cloudinary account (register + music upload)
 
 ## Environment variables
 
@@ -52,6 +61,7 @@ Create a **`.env`** in the project root (do not commit secrets).
 
 ```env
 PORT=8000
+NODE_ENV=development
 
 MONGO_URI=mongodb+srv://USER:PASS@cluster.mongodb.net
 DB_NAME=your_database_name
@@ -69,7 +79,7 @@ REFRESH_TOKEN_EXPIRY=7d
 CORS_ORIGIN=http://localhost:3000
 ```
 
-If you prefer `CLOUDINARY_CLOUD_NAME` in `.env`, update `cloudinaryService.js` to use the same name.
+Cookies use `secure: true` when `NODE_ENV=production`.
 
 ## Run locally
 
@@ -78,15 +88,17 @@ npm install
 node server.js
 ```
 
-The server starts **after** MongoDB connects. Base URL: `http://localhost:8000` (or your `PORT`).
+Server starts **after** MongoDB connects. Base URL: `http://localhost:8000` (or your `PORT`).
 
-Create **`public/temp`** before uploading files (Multer writes there first).
+Create **`public/temp`** before any file upload (Multer destination).
+
+Use **`credentials: "include"`** in the browser so auth cookies are sent on protected routes.
+
+---
 
 ## API overview
 
-All paths are relative to the server origin (e.g. `http://localhost:8000`).
-
-Use **`credentials: "include"`** in the browser (or equivalent in your HTTP client) so cookies are sent on protected routes.
+Base path: **`/api/v1/auth`**
 
 ### Register
 
@@ -94,18 +106,29 @@ Use **`credentials: "include"`** in the browser (or equivalent in your HTTP clie
 |---|---|
 | **Method** | `POST` |
 | **URL** | `/api/v1/auth/register` |
-| **Content-Type** | `application/json` |
+| **Content-Type** | `multipart/form-data` |
+| **Middleware** | Multer fields: `avatar` (1), `coverImage` (up to 2) |
 
-**Body** — only these keys are accepted:
+**Text fields:**
 
 | Field | Rules |
 |-------|--------|
-| `userName` | At least 4 characters after trim (stored lowercase) |
-| `email` | Required; validated on the User schema |
-| `password` | At least 6 characters |
-| `role` | `"user"` or `"artist"` |
+| `userName` | 4–20 characters |
+| `email` | Valid email |
+| `password` | Strong password (upper, lower, number, special char via `validator.isStrongPassword`) |
+| `gender` | `"male"`, `"female"`, or `"others"` |
+| `age` | Number, minimum **18** |
 
-**Success (`201`):** message, `user` (password excluded), `accessToken` and `refreshToken` in JSON, plus **httpOnly** cookies: `accessToken`, `refreshToken`.
+**Files (required):**
+
+| Field | Description |
+|-------|-------------|
+| `avatar` | Profile image |
+| `coverImage` | Cover image |
+
+**Success (`200`):** `message`, `createdUser` (password/refreshToken excluded), **httpOnly** cookies `accessToken` (1 day) and `refreshToken` (7 days).
+
+---
 
 ### Login
 
@@ -115,19 +138,11 @@ Use **`credentials: "include"`** in the browser (or equivalent in your HTTP clie
 | **URL** | `/api/v1/auth/login` |
 | **Content-Type** | `application/json` |
 
-**Body:** `email`, `password`.
+**Body:** `email`, `password` (validated by `LoginValidation.js`).
 
-**Success (`200`):** message, `user`, and the same cookie pair as register.
+**Success (`200`):** `message`, `createdUser`, plus `accessToken` and `refreshToken` cookies.
 
-### Logout
-
-| | |
-|---|---|
-| **Method** | `POST` |
-| **URL** | `/api/v1/auth/logout` |
-| **Auth** | Valid **`accessToken`** cookie (`verifyJWT`) |
-
-**Success (`200`):** clears `refreshToken` in the database, clears **`accessToken`** and **`refreshToken`** cookies, returns a success message.
+---
 
 ### Refresh access token
 
@@ -135,11 +150,86 @@ Use **`credentials: "include"`** in the browser (or equivalent in your HTTP clie
 |---|---|
 | **Method** | `POST` |
 | **URL** | `/api/v1/auth/refresh-token` |
-| **Auth** | Route uses `verifyJWT` in `auth.route.js` (see your route file for exact middleware order) |
+| **Auth** | **Public** — no `verifyJWT` |
 
-**Refresh token source:** `refreshToken` cookie, or `refreshToken` in the request body.
+**Refresh token source:** `refreshToken` **cookie only**.
 
-**Success (`200`):** new `accessToken` and `refreshToken` in cookies and JSON; refresh token in DB is rotated via `generateTokens.js`.
+**Success (`200`):** new tokens in cookies + success message. Refresh token in DB is rotated.
+
+---
+
+### Logout
+
+| | |
+|---|---|
+| **Method** | `POST` |
+| **URL** | `/api/v1/auth/logout` |
+| **Auth** | `verify2JWT` |
+
+**Success (`200`):** clears `accessToken` and `refreshToken` cookies, updates user in DB.
+
+---
+
+### Get profile
+
+| | |
+|---|---|
+| **Method** | `GET` |
+| **URL** | `/api/v1/auth/profile` |
+| **Auth** | `verify2JWT` |
+
+**Success (`200`):** `message`, `user` (from `req.user`).
+
+---
+
+### Update password
+
+| | |
+|---|---|
+| **Method** | `PATCH` |
+| **URL** | `/api/v1/auth/updatePassword` |
+| **Auth** | `verify2JWT` |
+| **Content-Type** | `application/json` |
+
+**Body:**
+
+| Field | Rules |
+|-------|--------|
+| `currentPassword` | Required |
+| `newPassword` | Required, min **8** characters, must differ from current |
+| `confirmPassword` | Must match `newPassword` |
+
+**Success (`200`):** password updated (hashed via User `pre("save")` hook).
+
+---
+
+### Update profile
+
+| | |
+|---|---|
+| **Method** | `PATCH` |
+| **URL** | `/api/v1/auth/updateProfile` |
+| **Auth** | `verify2JWT` |
+| **Content-Type** | `application/json` (text fields on current route) |
+
+**Allowed text fields (send only fields you want to change):**
+
+| Field | Rules |
+|-------|--------|
+| `userName` | String, 3–30 characters |
+| `age` | Integer, 13–120 |
+| `about` | String, max 500 characters |
+| `skills` | Array of non-empty strings |
+
+The controller also supports optional `avatar` / `coverImage` file uploads (JPEG, PNG, WebP, max 5 MB each) when Multer is added to this route.
+
+**Success (`200`):** `message`, updated `user`.
+
+---
+
+## Music API
+
+Base path: **`/api/v1/music`**
 
 ### Create music (artist only)
 
@@ -148,7 +238,7 @@ Use **`credentials: "include"`** in the browser (or equivalent in your HTTP clie
 | **Method** | `POST` |
 | **URL** | `/api/v1/music/create-music` |
 | **Content-Type** | `multipart/form-data` |
-| **Auth** | Valid **`accessToken`** cookie; **`role: "artist"`** |
+| **Auth** | `verifyJWT` + **`role: "artist"`** |
 
 **Middleware order:** `verifyJWT` → `verifyArtist` → Multer (`musicFile`) → controller.
 
@@ -156,34 +246,45 @@ Use **`credentials: "include"`** in the browser (or equivalent in your HTTP clie
 
 | Field | Description |
 |-------|-------------|
-| `musicFile` | One audio file (field name must match exactly) |
+| `musicFile` | One audio file |
 | `title` | Non-empty string |
 | `duration` | Positive number (seconds) |
 
-**Success (`201`):** `message` and populated `data` (`artist`: `userName`, `email`, `role`). Audio URL from Cloudinary; `thumbnail` uses a placeholder until you add a separate upload.
+**Success (`201`):** `message`, populated `data` with artist info. `thumbnail` uses a placeholder URL until a separate upload is added.
 
-## Request flow (high level)
+---
+
+## Request flow
 
 ```text
 Client → server.js (DB connect) → app.js → route → middleware → controller → model / service
 ```
 
-**Auth:** register/login → `generateTokens.js` → cookies. Protected routes → `verifyJWT` → `req.user`.
+**Register:** Multer → validation → Cloudinary (avatar + cover) → `User.create` → tokens → cookies.
 
-**Music upload:** JWT + artist check → Multer (`public/temp`) → Cloudinary → `Music.create`.
+**Login / refresh:** credentials or refresh cookie → tokens → cookies.
+
+**Protected auth/profile:** `verify2JWT` → `req.user` → controller.
+
+**Music upload:** `verifyJWT` → artist check → Multer → Cloudinary → `Music.create`.
+
+---
 
 ## Troubleshooting
 
 | Issue | What to check |
 |--------|----------------|
-| `Invalid fields in request` (register) | Body must only include `userName`, `email`, `password`, `role`. |
-| `401` on protected routes | Log in first; send **`accessToken`** cookie. |
-| `Refresh token is missing` / mismatch | Login again; cookie or body must match DB `refreshToken`. |
-| Forbidden on create-music | User must be an **artist**. |
-| `Send one file as form-data field: musicFile` | Multipart field name must be **`musicFile`**. |
-| Upload / Cloudinary errors | `.env` keys; `public/temp` exists; file under 25 MB. |
+| `Invalid fields in request object` (register) | Body keys must be exactly `userName`, `email`, `password`, `gender`, `age`. |
+| Strong password error | Password needs upper, lower, number, and special character. |
+| `Error getting files from client through multer` | Send both `avatar` and `coverImage` as multipart fields. |
+| `401` / `Unauthorized access` | Log in first; send **`accessToken`** cookie. |
+| Refresh token errors | `refreshToken` cookie must match value stored in DB. |
+| Forbidden on create-music | User must have **`role: "artist"`**. |
+| Upload / Cloudinary errors | `.env` keys; `public/temp` exists; file size limits. |
 | Mongo connection fails | `MONGO_URI`, `DB_NAME`, Atlas IP allowlist. |
-| CORS / cookies not sent | `CORS_ORIGIN` matches frontend URL; `credentials: true` on client. |
+| CORS / cookies not sent | `CORS_ORIGIN` matches frontend; client uses `credentials: "include"`. |
+
+---
 
 ## Author
 
