@@ -79,6 +79,26 @@ const userSchema = new Schema(
     skills: {
       type: [String],
     },
+
+       // 👤 Profile picture
+    avatar: {
+      url: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+    },
+
+    // 🖼️ Cover image
+    coverImage: {
+      url: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+    },
  
     role: {
         type: String,
