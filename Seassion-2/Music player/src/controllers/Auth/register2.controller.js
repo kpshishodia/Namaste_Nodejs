@@ -1,6 +1,6 @@
 import User from "../../models/user.model.js"
 import ValidateSignUpData from "../../utils/RegisterValidation.js"
-import uploadOnCloudinary from "../../services/cloudinaryService.js"
+import {uploadOnCloudinary} from "../../services/cloudinaryService.js"
 
 const registerUserController = async (req,res) => {
 try{

@@ -1,18 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config();
+
 // 📦 Loads environment variables from .env file into process.env
 
-// Import Cloudinary SDK (ES module syntax)
+// Import Cloudinary SDK
 import { v2 as cloudinary } from "cloudinary";
 
-// File system module (used to delete local files after upload)
+// File system module
 import fs from "fs";
 
 // -----------------------------
 // ☁️ Cloudinary Configuration
 // -----------------------------
-// Variable names must match your .env exactly. This project uses CLOUDNARY_CLOUD_NAME
-// (typo of CLOUDINARY); rename in .env to CLOUDINARY_CLOUD_NAME if you prefer the standard name.
+
 cloudinary.config({
   cloud_name: process.env.CLOUDNARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -22,39 +22,35 @@ cloudinary.config({
 // -----------------------------
 // 📤 Upload Function
 // -----------------------------
-// Flow / Pseudo Code:
-// 1. If no local path, return early
-// 2. Upload file to Cloudinary (resource_type: auto)
-// 3. Delete local temp file after success
-// 4. Return upload result (url, public_id, etc.) to controller
-// On error: delete temp file if present, return null
+
 const uploadOnCloudinary = async (localFilePath) => {
   try {
     // ❌ If file path is not provided, exit early
-    if (!localFilePath) return;
+    if (!localFilePath) return null;
 
     // 📤 Upload file to Cloudinary
-    // Returns an object containing URL, public_id, etc.
-    const uploadResult = await cloudinary.uploader.upload(localFilePath , {
-        resource_type: "auto"
-    });
+    const uploadResult = await cloudinary.uploader.upload(
+      localFilePath,
+      {
+        resource_type: "auto",
+      }
+    );
 
-    // 🧾 Log upload response (for debugging)
+    // 🧾 Log upload response
     console.log("uploadResult:", uploadResult);
 
-    // 🗑️ Delete file from local storage after successful upload
-    // This prevents unnecessary storage usage on server
+    // 🗑️ Delete local temp file after successful upload
     fs.unlinkSync(localFilePath);
 
-    // ✅ Return upload result (important for controller usage)
+    // ✅ Return upload result
     return uploadResult;
 
   } catch (error) {
     // ❌ If any error occurs during upload
     console.log(error);
 
-    // 🗑️ Cleanup: delete file even if upload fails
-    if (localFilePath) {
+    // 🗑️ Delete local file if it still exists
+    if (localFilePath && fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
 
@@ -63,5 +59,40 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-// Default export: import with `const uploadOnCloudinary = require("...")` (no { } needed)
-export default uploadOnCloudinary;
+
+// -----------------------------
+// 🗑️ Delete Function
+// -----------------------------
+
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    // ❌ If public_id is not provided, exit early
+    if (!publicId) return null;
+
+    // 🗑️ Delete image from Cloudinary
+    const deleteResult = await cloudinary.uploader.destroy(
+      publicId
+    );
+
+    // 🧾 Log delete response
+    console.log("deleteResult:", deleteResult);
+
+    // ✅ Return delete result
+    return deleteResult;
+
+  } catch (error) {
+    // ❌ If deletion fails
+    console.log("Cloudinary delete error:", error);
+
+    // ❌ Return null to indicate failure
+    return null;
+  }
+};
+
+
+// -----------------------------
+// 📦 Exports
+// -----------------------------
+
+export {uploadOnCloudinary, deleteFromCloudinary };
+

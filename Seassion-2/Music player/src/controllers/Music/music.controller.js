@@ -12,7 +12,7 @@
 // Note: Model requires thumbnail; placeholder used until second upload is added.
 
 import Music from "../../models/music.model.js";
-import uploadOnCloudinary from "../../services/cloudinaryService.js";
+import {uploadOnCloudinary} from "../../services/cloudinaryService.js";
 
 const PLACEHOLDER_THUMBNAIL =
   "https://placehold.co/400x400/1a1a1a/fff?text=Music";
