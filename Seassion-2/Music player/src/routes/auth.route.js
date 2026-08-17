@@ -55,7 +55,10 @@ userRouter.route("/updatePassword").patch(
 )
 
 userRouter.route("/updateProfile").patch(
-  verifyJWT , updateProfileController
+  verifyJWT , fileUpload.fields([
+    {name: "avatar" , maxCount: 1},
+    {name: "coverImage" , maxCount: 1}
+  ]),  updateProfileController
 )
 
 export default  userRouter;
