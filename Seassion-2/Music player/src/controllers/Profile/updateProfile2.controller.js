@@ -1,8 +1,9 @@
 
 import User from "../../models/user.model.js";
-import {uploadOnCloudinary} from "../../services/cloudinaryService.js";
+import {uploadOnCloudinary, deleteFromCloudinary} from "../../services/cloudinaryService.js";
 
 const updateProfileController = async (req, res) => {
+    let requestSkills; 
   try {
     // ============================================================
     // 1. GET REQUESTED TEXT FIELDS
@@ -124,7 +125,7 @@ const updateProfileController = async (req, res) => {
     // ---------------- SKILLS ----------------
 
     if (req.body.skills !== undefined) {
-  let requestSkills;
+
 
   try {
     requestSkills = JSON.parse(req.body.skills);
@@ -318,7 +319,7 @@ const updateProfileController = async (req, res) => {
 
 
     if (req.body.skills !== undefined) {
-      updateData.skills = req.body.skills;
+      updateData.skills = requestSkills;
     }
 
 
@@ -338,6 +339,8 @@ const updateProfileController = async (req, res) => {
 
       const avatarCloudinaryResult =
         await uploadOnCloudinary(avatar.path);
+
+        console.log("avatarCloudinaryResult:", avatarCloudinaryResult)
 
 
       // Make sure Cloudinary actually returned a result.
@@ -449,30 +452,27 @@ const updateProfileController = async (req, res) => {
     // Only delete the old image if a NEW image was uploaded.
 
 
-    if (
-      req.files?.avatar &&
-      user.avatar?.public_id
-    ) {
-
-      // Example:
-      //
-      // await deleteFromCloudinary(user.avatar.public_id);
-      //
-      // Use your own Cloudinary delete service here.
-    }
+// Delete OLD avatar
+if (
+  req.files?.avatar &&
+  user.avatar?.public_id
+) {
+  await deleteFromCloudinary(
+    user.avatar.public_id
+  );
+}
 
 
-    if (
-      req.files?.coverImage &&
-      user.coverImage?.public_id
-    ) {
+// Delete OLD cover image
+if (
+  req.files?.coverImage &&
+  user.coverImage?.public_id
+) {
+  await deleteFromCloudinary(
+    user.coverImage.public_id
+  );
+}
 
-      // Example:
-      //
-      // await deleteFromCloudinary(user.coverImage.public_id);
-      //
-      // Use your own Cloudinary delete service here.
-    }
 
 
     // ============================================================
